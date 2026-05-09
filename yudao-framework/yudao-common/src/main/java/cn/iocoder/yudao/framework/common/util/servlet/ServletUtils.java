@@ -94,16 +94,26 @@ public class ServletUtils {
 
     public static String getBody(HttpServletRequest request) {
         // 只有在 json 请求在读取，因为只有 CacheRequestBodyFilter 才会进行缓存，支持重复读取
-        if (isJsonRequest(request)) {
-            return ServletUtil.getBody(request);
+        try {
+            if (isJsonRequest(request)) {
+                return ServletUtil.getBody(request);
+            }
+        } catch (IllegalStateException e) {
+            // 忽略非法状态异常，例如：getInputStream() has already been called for this request
+            // 这种情况可能发生在错误页面转发或者输入流已被消费的场景
         }
         return null;
     }
 
     public static byte[] getBodyBytes(HttpServletRequest request) {
         // 只有在 json 请求在读取，因为只有 CacheRequestBodyFilter 才会进行缓存，支持重复读取
-        if (isJsonRequest(request)) {
-            return ServletUtil.getBodyBytes(request);
+        try {
+            if (isJsonRequest(request)) {
+                return ServletUtil.getBodyBytes(request);
+            }
+        } catch (IllegalStateException e) {
+            // 忽略非法状态异常，例如：getInputStream() has already been called for this request
+            // 这种情况可能发生在错误页面转发或者输入流已被消费的场景
         }
         return null;
     }

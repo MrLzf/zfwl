@@ -1,0 +1,33 @@
+-- 教师资料表：需先执行 tutor_profile.sql
+
+CREATE TABLE IF NOT EXISTS `tutor_teacher_profile` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '教师资料编号',
+  `user_id` bigint NOT NULL COMMENT '会员用户编号',
+  `profile_id` bigint NOT NULL COMMENT '家教用户档案编号',
+  `education_level` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '最高学历',
+  `school_name` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '学校',
+  `major` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '专业',
+  `has_teacher_certificate` bit(1) NOT NULL DEFAULT b'0' COMMENT '是否有教师资格证',
+  `subjects` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '可授科目，多个用逗号分隔',
+  `teach_modes` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '授课模式，多个用逗号分隔',
+  `hourly_price_min` int NOT NULL DEFAULT 0 COMMENT '最低时薪',
+  `hourly_price_max` int NOT NULL DEFAULT 0 COMMENT '最高时薪',
+  `service_radius_km` int NOT NULL DEFAULT 0 COMMENT '服务半径，单位公里',
+  `free_trial_enabled` bit(1) NOT NULL DEFAULT b'0' COMMENT '是否支持试课',
+  `free_trial_minutes` int NOT NULL DEFAULT 0 COMMENT '试课时长，单位分钟',
+  `teaching_years` int NOT NULL DEFAULT 0 COMMENT '教龄',
+  `intro` varchar(2000) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '教学介绍',
+  `certification_status` tinyint NOT NULL DEFAULT 0 COMMENT '认证状态：0 待提交，10 待审核，20 通过，30 拒绝',
+  `rating_avg` decimal(4,2) NOT NULL DEFAULT 0.00 COMMENT '平均评分',
+  `review_count` int NOT NULL DEFAULT 0 COMMENT '评价数',
+  `creator` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT '' COMMENT '创建者',
+  `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `updater` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT '' COMMENT '更新者',
+  `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  `deleted` bit(1) NOT NULL DEFAULT b'0' COMMENT '是否删除',
+  `tenant_id` bigint NOT NULL DEFAULT 0 COMMENT '租户编号',
+  PRIMARY KEY (`id`) USING BTREE,
+  UNIQUE KEY `uk_tutor_teacher_profile_user` (`user_id`, `deleted`) USING BTREE,
+  KEY `idx_tutor_teacher_profile_profile` (`profile_id`) USING BTREE,
+  KEY `idx_tutor_teacher_profile_cert` (`certification_status`) USING BTREE
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '家教教师资料表';

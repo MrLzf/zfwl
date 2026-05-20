@@ -59,3 +59,45 @@ WHERE @tutor_city_menu_id IS NOT NULL
       SELECT 1 FROM `system_menu`
       WHERE `parent_id` = @tutor_city_menu_id AND `permission` = 'tutor:city:update' AND `deleted` = b'0'
   );
+
+-- 二级菜单：教师认证审核
+INSERT INTO `system_menu` (`name`, `permission`, `type`, `sort`, `parent_id`, `path`, `icon`, `component`,
+                           `component_name`, `status`, `visible`, `keep_alive`, `always_show`,
+                           `creator`, `create_time`, `updater`, `update_time`, `deleted`)
+SELECT '教师认证审核', 'tutor:certification:query', 2, 80, @tutor_parent_id, 'certification', 'ep:checked',
+       'tutor/certification/index', 'TutorCertification', 0, b'1', b'1', b'1', 'admin', NOW(), 'admin', NOW(), b'0'
+WHERE @tutor_parent_id IS NOT NULL
+  AND NOT EXISTS (
+      SELECT 1 FROM `system_menu`
+      WHERE `parent_id` = @tutor_parent_id AND `path` = 'certification' AND `deleted` = b'0'
+  );
+
+SET @tutor_certification_menu_id := (
+    SELECT `id` FROM `system_menu`
+    WHERE `parent_id` = @tutor_parent_id AND `path` = 'certification' AND `deleted` = b'0'
+    ORDER BY `id` ASC LIMIT 1
+);
+
+-- 按钮权限：认证查询
+INSERT INTO `system_menu` (`name`, `permission`, `type`, `sort`, `parent_id`, `path`, `icon`, `component`,
+                           `component_name`, `status`, `visible`, `keep_alive`, `always_show`,
+                           `creator`, `create_time`, `updater`, `update_time`, `deleted`)
+SELECT '认证查询', 'tutor:certification:query', 3, 1, @tutor_certification_menu_id, '', '', '', NULL,
+       0, b'1', b'1', b'1', 'admin', NOW(), 'admin', NOW(), b'0'
+WHERE @tutor_certification_menu_id IS NOT NULL
+  AND NOT EXISTS (
+      SELECT 1 FROM `system_menu`
+      WHERE `parent_id` = @tutor_certification_menu_id AND `permission` = 'tutor:certification:query' AND `deleted` = b'0'
+  );
+
+-- 按钮权限：认证审核
+INSERT INTO `system_menu` (`name`, `permission`, `type`, `sort`, `parent_id`, `path`, `icon`, `component`,
+                           `component_name`, `status`, `visible`, `keep_alive`, `always_show`,
+                           `creator`, `create_time`, `updater`, `update_time`, `deleted`)
+SELECT '认证审核', 'tutor:certification:audit', 3, 2, @tutor_certification_menu_id, '', '', '', NULL,
+       0, b'1', b'1', b'1', 'admin', NOW(), 'admin', NOW(), b'0'
+WHERE @tutor_certification_menu_id IS NOT NULL
+  AND NOT EXISTS (
+      SELECT 1 FROM `system_menu`
+      WHERE `parent_id` = @tutor_certification_menu_id AND `permission` = 'tutor:certification:audit' AND `deleted` = b'0'
+  );

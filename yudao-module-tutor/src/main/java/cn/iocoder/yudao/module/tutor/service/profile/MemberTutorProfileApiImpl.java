@@ -46,6 +46,10 @@ public class MemberTutorProfileApiImpl implements MemberTutorProfileApi {
                 .cityId(profile.getCityId())
                 .cityCode(profile.getCityCode())
                 .cityName(profile.getCityName())
+                .longitude(profile.getLongitude())
+                .latitude(profile.getLatitude())
+                .locationAddress(profile.getLocationAddress())
+                .locationTime(profile.getLocationTime())
                 .build();
     }
 

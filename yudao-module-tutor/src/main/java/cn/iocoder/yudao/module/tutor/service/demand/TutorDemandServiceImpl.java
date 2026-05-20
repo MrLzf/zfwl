@@ -1,0 +1,168 @@
+package cn.iocoder.yudao.module.tutor.service.demand;
+
+import cn.hutool.core.util.DesensitizedUtil;
+import cn.hutool.core.util.StrUtil;
+import cn.iocoder.yudao.module.tutor.controller.app.demand.vo.AppTutorDemandSaveReqVO;
+import cn.iocoder.yudao.module.tutor.dal.dataobject.city.TutorCityDO;
+import cn.iocoder.yudao.module.tutor.dal.dataobject.demand.TutorDemandDO;
+import cn.iocoder.yudao.module.tutor.dal.dataobject.parent.TutorParentProfileDO;
+import cn.iocoder.yudao.module.tutor.dal.mysql.demand.TutorDemandMapper;
+import cn.iocoder.yudao.module.tutor.enums.audit.TutorAuditStatusEnum;
+import cn.iocoder.yudao.module.tutor.enums.publish.TutorPublishStatusEnum;
+import cn.iocoder.yudao.module.tutor.service.city.TutorCityService;
+import cn.iocoder.yudao.module.tutor.service.parent.TutorParentProfileService;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import org.springframework.stereotype.Service;
+import org.springframework.validation.annotation.Validated;
+
+import javax.annotation.Resource;
+import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Objects;
+
+import static cn.iocoder.yudao.framework.common.exception.util.ServiceExceptionUtil.exception;
+import static cn.iocoder.yudao.module.tutor.enums.ErrorCodeConstants.*;
+
+@Service
+@Validated
+public class TutorDemandServiceImpl implements TutorDemandService {
+
+    private static final int MAX_ACTIVE_PUBLISH_COUNT = 3;
+    private static final List<Integer> ACTIVE_STATUSES = Arrays.asList(
+            TutorPublishStatusEnum.WAIT_AUDIT.getStatus(), TutorPublishStatusEnum.SHOWING.getStatus());
+
+    @Resource
+    private TutorDemandMapper demandMapper;
+    @Resource
+    private TutorParentProfileService parentProfileService;
+    @Resource
+    private TutorCityService cityService;
+
+    @Override
+    public TutorDemandDO createDemand(Long userId, AppTutorDemandSaveReqVO reqVO) {
+        validateParentProfile(userId);
+        validateActivePublishCount(userId);
+        TutorCityDO city = cityService.validateCityOpened(reqVO.getCityCode());
+        TutorDemandDO demand = buildDemand(userId, city, reqVO)
+                .status(TutorPublishStatusEnum.WAIT_AUDIT.getStatus())
+                .auditStatus(TutorAuditStatusEnum.WAITING.getStatus())
+                .viewCount(0)
+                .contactViewCount(0)
+                .matchCount(0)
+                .expireTime(LocalDateTime.now().plusDays(30))
+                .build();
+        demandMapper.insert(demand);
+        return demand;
+    }
+
+    @Override
+    public TutorDemandDO updateDemand(Long userId, Long id, AppTutorDemandSaveReqVO reqVO) {
+        validateParentProfile(userId);
+        TutorDemandDO demand = validateDemandOwner(userId, id);
+        if (!ACTIVE_STATUSES.contains(demand.getStatus())) {
+            validateActivePublishCount(userId);
+        }
+        TutorCityDO city = cityService.validateCityOpened(reqVO.getCityCode());
+        TutorDemandDO updateObj = buildDemand(userId, city, reqVO)
+                .id(id)
+                .status(TutorPublishStatusEnum.WAIT_AUDIT.getStatus())
+                .auditStatus(TutorAuditStatusEnum.WAITING.getStatus())
+                .expireTime(LocalDateTime.now().plusDays(30))
+                .build();
+        demandMapper.update(null, new LambdaUpdateWrapper<TutorDemandDO>()
+                .eq(TutorDemandDO::getId, id)
+                .set(TutorDemandDO::getTitle, updateObj.getTitle())
+                .set(TutorDemandDO::getGrade, updateObj.getGrade())
+                .set(TutorDemandDO::getSubjects, updateObj.getSubjects())
+                .set(TutorDemandDO::getTeachMode, updateObj.getTeachMode())
+                .set(TutorDemandDO::getBudgetMin, updateObj.getBudgetMin())
+                .set(TutorDemandDO::getBudgetMax, updateObj.getBudgetMax())
+                .set(TutorDemandDO::getDescription, updateObj.getDescription())
+                .set(TutorDemandDO::getCityCode, updateObj.getCityCode())
+                .set(TutorDemandDO::getCityName, updateObj.getCityName())
+                .set(TutorDemandDO::getLongitude, updateObj.getLongitude())
+                .set(TutorDemandDO::getLatitude, updateObj.getLatitude())
+                .set(TutorDemandDO::getDistanceVisible, updateObj.getDistanceVisible())
+                .set(TutorDemandDO::getContactMobileEncrypt, updateObj.getContactMobileEncrypt())
+                .set(TutorDemandDO::getContactMobileMask, updateObj.getContactMobileMask())
+                .set(TutorDemandDO::getContactWechatEncrypt, updateObj.getContactWechatEncrypt())
+                .set(TutorDemandDO::getContactWechatMask, updateObj.getContactWechatMask())
+                .set(TutorDemandDO::getStatus, updateObj.getStatus())
+                .set(TutorDemandDO::getAuditStatus, updateObj.getAuditStatus())
+                .set(TutorDemandDO::getRejectReason, null)
+                .set(TutorDemandDO::getExpireTime, updateObj.getExpireTime()));
+        return demandMapper.selectById(id);
+    }
+
+    @Override
+    public void offlineDemand(Long userId, Long id) {
+        validateDemandOwner(userId, id);
+        demandMapper.updateById(TutorDemandDO.builder()
+                .id(id)
+                .status(TutorPublishStatusEnum.OFFLINE.getStatus())
+                .build());
+    }
+
+    @Override
+    public List<TutorDemandDO> getMyDemandList(Long userId) {
+        return demandMapper.selectListByUserId(userId);
+    }
+
+    private TutorDemandDO.TutorDemandDOBuilder buildDemand(Long userId, TutorCityDO city, AppTutorDemandSaveReqVO reqVO) {
+        return TutorDemandDO.builder()
+                .userId(userId)
+                .title(reqVO.getTitle())
+                .grade(reqVO.getGrade())
+                .subjects(reqVO.getSubjects())
+                .teachMode(reqVO.getTeachMode())
+                .budgetMin(reqVO.getBudgetMin())
+                .budgetMax(reqVO.getBudgetMax())
+                .description(reqVO.getDescription())
+                .cityCode(city.getCode())
+                .cityName(city.getName())
+                .longitude(reqVO.getLongitude())
+                .latitude(reqVO.getLatitude())
+                .distanceVisible(!Boolean.FALSE.equals(reqVO.getDistanceVisible()))
+                .contactMobileEncrypt(reqVO.getContactMobile())
+                .contactMobileMask(DesensitizedUtil.mobilePhone(reqVO.getContactMobile()))
+                .contactWechatEncrypt(reqVO.getContactWechat())
+                .contactWechatMask(maskWechat(reqVO.getContactWechat()));
+    }
+
+    private void validateParentProfile(Long userId) {
+        TutorParentProfileDO parentProfile = parentProfileService.getParentProfile(userId);
+        if (parentProfile == null) {
+            throw exception(PARENT_PROFILE_NOT_EXISTS);
+        }
+    }
+
+    private TutorDemandDO validateDemandOwner(Long userId, Long id) {
+        TutorDemandDO demand = demandMapper.selectById(id);
+        if (demand == null) {
+            throw exception(DEMAND_NOT_EXISTS);
+        }
+        if (!Objects.equals(userId, demand.getUserId())) {
+            throw exception(PUBLISH_OPERATION_FORBIDDEN);
+        }
+        return demand;
+    }
+
+    private void validateActivePublishCount(Long userId) {
+        Long count = demandMapper.selectCountByUserIdAndStatuses(userId, ACTIVE_STATUSES);
+        if (count != null && count >= MAX_ACTIVE_PUBLISH_COUNT) {
+            throw exception(PUBLISH_COUNT_EXCEED);
+        }
+    }
+
+    private String maskWechat(String wechat) {
+        if (StrUtil.isBlank(wechat)) {
+            return null;
+        }
+        if (wechat.length() <= 4) {
+            return wechat.charAt(0) + "***";
+        }
+        return wechat.substring(0, 2) + "***" + wechat.substring(wechat.length() - 2);
+    }
+
+}

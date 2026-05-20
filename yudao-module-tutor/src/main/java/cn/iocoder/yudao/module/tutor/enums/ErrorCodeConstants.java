@@ -38,6 +38,7 @@ public interface ErrorCodeConstants {
     ErrorCode PUBLISH_COUNT_EXCEED = new ErrorCode(1_040_004_002, "同时最多发布 3 条有效内容");
     ErrorCode PUBLISH_AUDIT_REJECT_REASON_REQUIRED = new ErrorCode(1_040_004_003, "拒绝发布内容时必须填写原因");
     ErrorCode PUBLISH_STATUS_NOT_VISIBLE = new ErrorCode(1_040_004_004, "发布内容暂不可见");
+    ErrorCode PUBLISH_OPERATION_FORBIDDEN = new ErrorCode(1_040_004_005, "无权操作该发布内容");
 
     // ========== 联系与匹配 1-040-005-000 ==========
     ErrorCode CONTACT_TARGET_NOT_EXISTS = new ErrorCode(1_040_005_000, "联系方式目标不存在");

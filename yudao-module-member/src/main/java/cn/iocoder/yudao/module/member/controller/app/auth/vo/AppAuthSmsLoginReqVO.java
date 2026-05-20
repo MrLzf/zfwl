@@ -12,6 +12,8 @@ import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.Length;
 
 import javax.validation.constraints.AssertTrue;
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.Pattern;
 
@@ -33,6 +35,16 @@ public class AppAuthSmsLoginReqVO {
     @Pattern(regexp = "^[0-9]+$", message = "手机验证码必须都是数字")
     private String code;
 
+    // ========== 家教登录扩展 ==========
+
+    @Schema(description = "家教身份：1 家长，2 教师", example = "1")
+    @Min(value = 1, message = "家教身份不正确")
+    @Max(value = 2, message = "家教身份不正确")
+    private Integer tutorRole;
+
+    @Schema(description = "家教服务城市编码", example = "110100")
+    private String tutorCityCode;
+
     // ========== 绑定社交登录时，需要传递如下参数 ==========
 
     @Schema(description = "社交平台的类型，参见 SocialTypeEnum 枚举值", requiredMode = Schema.RequiredMode.REQUIRED, example = "10")
@@ -53,6 +65,11 @@ public class AppAuthSmsLoginReqVO {
     @AssertTrue(message = "授权 state 不能为空")
     public boolean isSocialState() {
         return socialType == null || StrUtil.isNotEmpty(socialState);
+    }
+
+    @AssertTrue(message = "家教服务城市不能为空")
+    public boolean isTutorCityCodeValid() {
+        return tutorRole == null || StrUtil.isNotEmpty(tutorCityCode);
     }
 
 }

@@ -35,4 +35,7 @@ public class AppAuthLoginRespVO {
     @Schema(description = "社交用户 openid", example = "qq768")
     private String openid;
 
+    @Schema(description = "家教档案；传入 tutorRole 时会尝试初始化")
+    private AppAuthTutorProfileRespVO tutorProfile;
+
 }

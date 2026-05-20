@@ -12,6 +12,8 @@ import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.Length;
 
 import javax.validation.constraints.AssertTrue;
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
 import javax.validation.constraints.NotEmpty;
 
 @Schema(description = "用户 APP - 手机 + 密码登录 Request VO,如果登录并绑定社交用户，需要传递 social 开头的参数")
@@ -30,6 +32,16 @@ public class AppAuthLoginReqVO {
     @NotEmpty(message = "密码不能为空")
     @Length(min = 4, max = 16, message = "密码长度为 4-16 位")
     private String password;
+
+    // ========== 家教登录扩展 ==========
+
+    @Schema(description = "家教身份：1 家长，2 教师", example = "1")
+    @Min(value = 1, message = "家教身份不正确")
+    @Max(value = 2, message = "家教身份不正确")
+    private Integer tutorRole;
+
+    @Schema(description = "家教服务城市编码", example = "110100")
+    private String tutorCityCode;
 
     // ========== 绑定社交登录时，需要传递如下参数 ==========
 
@@ -51,6 +63,11 @@ public class AppAuthLoginReqVO {
     @AssertTrue(message = "授权 state 不能为空")
     public boolean isSocialState() {
         return socialType == null || StrUtil.isNotEmpty(socialState);
+    }
+
+    @AssertTrue(message = "家教服务城市不能为空")
+    public boolean isTutorCityCodeValid() {
+        return tutorRole == null || StrUtil.isNotEmpty(tutorCityCode);
     }
 
 }

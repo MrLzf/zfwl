@@ -27,6 +27,8 @@ import cn.iocoder.yudao.module.system.enums.oauth2.OAuth2ClientConstants;
 import cn.iocoder.yudao.module.system.enums.sms.SmsSceneEnum;
 import cn.iocoder.yudao.module.system.enums.social.SocialTypeEnum;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -59,6 +61,8 @@ public class MemberAuthServiceImpl implements MemberAuthService {
     private SocialClientApi socialClientApi;
     @Resource
     private OAuth2TokenCommonApi oauth2TokenApi;
+    @Autowired
+    private ObjectProvider<MemberTutorProfileApi> tutorProfileApiProvider;
 
     @Override
     public AppAuthLoginRespVO login(AppAuthLoginReqVO reqVO) {
@@ -73,7 +77,8 @@ public class MemberAuthServiceImpl implements MemberAuthService {
         }
 
         // 创建 Token 令牌，记录登录日志
-        return createTokenAfterLoginSuccess(user, reqVO.getMobile(), LoginLogTypeEnum.LOGIN_MOBILE, openid);
+        return createTokenAfterLoginSuccess(user, reqVO.getMobile(), LoginLogTypeEnum.LOGIN_MOBILE, openid,
+                reqVO.getTutorRole(), reqVO.getTutorCityCode());
     }
 
     @Override
@@ -101,7 +106,8 @@ public class MemberAuthServiceImpl implements MemberAuthService {
         }
 
         // 创建 Token 令牌，记录登录日志
-        return createTokenAfterLoginSuccess(user, reqVO.getMobile(), LoginLogTypeEnum.LOGIN_SMS, openid);
+        return createTokenAfterLoginSuccess(user, reqVO.getMobile(), LoginLogTypeEnum.LOGIN_SMS, openid,
+                reqVO.getTutorRole(), reqVO.getTutorCityCode());
     }
 
     @Override
@@ -129,7 +135,8 @@ public class MemberAuthServiceImpl implements MemberAuthService {
         }
 
         // 创建 Token 令牌，记录登录日志
-        return createTokenAfterLoginSuccess(user, user.getMobile(), LoginLogTypeEnum.LOGIN_SOCIAL, socialUser.getOpenid());
+        return createTokenAfterLoginSuccess(user, user.getMobile(), LoginLogTypeEnum.LOGIN_SOCIAL, socialUser.getOpenid(),
+                null, null);
     }
 
     @Override
@@ -149,11 +156,14 @@ public class MemberAuthServiceImpl implements MemberAuthService {
                 SocialTypeEnum.WECHAT_MINI_PROGRAM.getType(), reqVO.getLoginCode(), reqVO.getState()));
 
         // 创建 Token 令牌，记录登录日志
-        return createTokenAfterLoginSuccess(user, user.getMobile(), LoginLogTypeEnum.LOGIN_SOCIAL, openid);
+        return createTokenAfterLoginSuccess(user, user.getMobile(), LoginLogTypeEnum.LOGIN_SOCIAL, openid,
+                reqVO.getTutorRole(), reqVO.getTutorCityCode());
     }
 
     private AppAuthLoginRespVO createTokenAfterLoginSuccess(MemberUserDO user, String mobile,
-                                                            LoginLogTypeEnum logType, String openid) {
+                                                            LoginLogTypeEnum logType, String openid,
+                                                            Integer tutorRole, String tutorCityCode) {
+        AppAuthTutorProfileRespVO tutorProfile = resolveTutorProfile(user.getId(), tutorRole, tutorCityCode);
         // 插入登陆日志
         createLoginLog(user.getId(), mobile, logType, LoginResultEnum.SUCCESS);
         // 创建 Token 令牌
@@ -161,7 +171,9 @@ public class MemberAuthServiceImpl implements MemberAuthService {
                 .setUserId(user.getId()).setUserType(getUserType().getValue())
                 .setClientId(OAuth2ClientConstants.CLIENT_ID_DEFAULT));
         // 构建返回结果
-        return AuthConvert.INSTANCE.convert(accessTokenRespDTO, openid);
+        AppAuthLoginRespVO respVO = AuthConvert.INSTANCE.convert(accessTokenRespDTO, openid);
+        respVO.setTutorProfile(tutorProfile);
+        return respVO;
     }
 
     @Override
@@ -254,7 +266,25 @@ public class MemberAuthServiceImpl implements MemberAuthService {
     public AppAuthLoginRespVO refreshToken(String refreshToken) {
         OAuth2AccessTokenRespDTO accessTokenDO = oauth2TokenApi.refreshAccessToken(refreshToken,
                 OAuth2ClientConstants.CLIENT_ID_DEFAULT);
-        return AuthConvert.INSTANCE.convert(accessTokenDO, null);
+        AppAuthLoginRespVO respVO = AuthConvert.INSTANCE.convert(accessTokenDO, null);
+        if (accessTokenDO != null) {
+            respVO.setTutorProfile(resolveTutorProfile(accessTokenDO.getUserId(), null, null));
+        }
+        return respVO;
+    }
+
+    private AppAuthTutorProfileRespVO resolveTutorProfile(Long userId, Integer tutorRole, String tutorCityCode) {
+        if (userId == null) {
+            return null;
+        }
+        MemberTutorProfileApi tutorProfileApi = tutorProfileApiProvider.getIfAvailable();
+        if (tutorProfileApi == null) {
+            return null;
+        }
+        if (tutorRole != null) {
+            return tutorProfileApi.initProfileIfAbsent(userId, tutorRole, tutorCityCode);
+        }
+        return tutorProfileApi.getProfile(userId);
     }
 
     private void createLogoutLog(Long userId) {

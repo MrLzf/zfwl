@@ -17,6 +17,10 @@ public interface ErrorCodeConstants {
     ErrorCode PROFILE_NOT_EXISTS = new ErrorCode(1_040_002_000, "家教用户档案不存在");
     ErrorCode PROFILE_ROLE_SELECTED = new ErrorCode(1_040_002_001, "用户身份已选择，如需修改请发起身份变更申请");
     ErrorCode PROFILE_ROLE_INVALID = new ErrorCode(1_040_002_002, "用户身份不正确");
+    ErrorCode PROFILE_ROLE_NOT_PARENT = new ErrorCode(1_040_002_003, "当前身份不是家长，无法维护家长资料");
+
+    // ========== 家长资料 1-040-002-100 ==========
+    ErrorCode PARENT_PROFILE_NOT_EXISTS = new ErrorCode(1_040_002_100, "家长资料不存在");
 
     // ========== 教师认证 1-040-003-000 ==========
     ErrorCode CERTIFICATION_NOT_EXISTS = new ErrorCode(1_040_003_000, "教师认证不存在");

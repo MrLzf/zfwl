@@ -7,6 +7,7 @@ import cn.iocoder.yudao.module.tutor.controller.app.profile.vo.AppTutorProfileLo
 import cn.iocoder.yudao.module.tutor.dal.dataobject.city.TutorCityDO;
 import cn.iocoder.yudao.module.tutor.dal.dataobject.profile.TutorUserProfileDO;
 import cn.iocoder.yudao.module.tutor.dal.mysql.profile.TutorUserProfileMapper;
+import cn.iocoder.yudao.module.tutor.enums.profile.TutorUserRoleEnum;
 import cn.iocoder.yudao.module.tutor.service.city.TutorCityService;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
@@ -16,6 +17,7 @@ import java.time.LocalDateTime;
 
 import static cn.iocoder.yudao.framework.common.exception.util.ServiceExceptionUtil.exception;
 import static cn.iocoder.yudao.module.tutor.enums.ErrorCodeConstants.PROFILE_NOT_EXISTS;
+import static cn.iocoder.yudao.module.tutor.enums.ErrorCodeConstants.PROFILE_ROLE_INVALID;
 import static cn.iocoder.yudao.module.tutor.enums.ErrorCodeConstants.PROFILE_ROLE_SELECTED;
 
 /**
@@ -41,6 +43,7 @@ public class TutorUserProfileServiceImpl implements TutorUserProfileService {
         if (profile != null) {
             throw exception(PROFILE_ROLE_SELECTED);
         }
+        validateRole(reqVO.getRole());
         TutorCityDO city = cityService.validateCityOpened(reqVO.getCityCode());
         profile = TutorUserProfileDO.builder()
                 .userId(userId)
@@ -75,6 +78,15 @@ public class TutorUserProfileServiceImpl implements TutorUserProfileService {
         }
         profileMapper.updateById(updateObj);
         return profileMapper.selectById(profile.getId());
+    }
+
+    private void validateRole(Integer role) {
+        for (Integer roleValue : TutorUserRoleEnum.ARRAYS) {
+            if (roleValue.equals(role)) {
+                return;
+            }
+        }
+        throw exception(PROFILE_ROLE_INVALID);
     }
 
 }

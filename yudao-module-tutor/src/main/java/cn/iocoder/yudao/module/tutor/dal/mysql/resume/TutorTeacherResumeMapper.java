@@ -8,6 +8,7 @@ import cn.iocoder.yudao.module.tutor.controller.app.square.vo.AppTutorTeacherRes
 import cn.iocoder.yudao.module.tutor.dal.dataobject.resume.TutorTeacherResumeDO;
 import cn.iocoder.yudao.module.tutor.enums.audit.TutorAuditStatusEnum;
 import cn.iocoder.yudao.module.tutor.enums.publish.TutorPublishStatusEnum;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import org.apache.ibatis.annotations.Mapper;
 
 import java.util.Collection;
@@ -55,6 +56,12 @@ public interface TutorTeacherResumeMapper extends BaseMapperX<TutorTeacherResume
                 .orderByDesc(TutorTeacherResumeDO::getTopUntil)
                 .orderByDesc(TutorTeacherResumeDO::getUrgentUntil)
                 .orderByDesc(TutorTeacherResumeDO::getId));
+    }
+
+    default void updateViewCountIncr(Long id) {
+        update(null, new LambdaUpdateWrapper<TutorTeacherResumeDO>()
+                .eq(TutorTeacherResumeDO::getId, id)
+                .setSql("view_count = view_count + 1"));
     }
 
 }

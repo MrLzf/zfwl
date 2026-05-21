@@ -8,6 +8,7 @@ import cn.iocoder.yudao.module.tutor.controller.app.square.vo.AppTutorDemandPage
 import cn.iocoder.yudao.module.tutor.dal.dataobject.demand.TutorDemandDO;
 import cn.iocoder.yudao.module.tutor.enums.audit.TutorAuditStatusEnum;
 import cn.iocoder.yudao.module.tutor.enums.publish.TutorPublishStatusEnum;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import org.apache.ibatis.annotations.Mapper;
 
 import java.time.LocalDateTime;
@@ -57,6 +58,12 @@ public interface TutorDemandMapper extends BaseMapperX<TutorDemandDO> {
                 .orderByDesc(TutorDemandDO::getTopUntil)
                 .orderByDesc(TutorDemandDO::getUrgentUntil)
                 .orderByDesc(TutorDemandDO::getId));
+    }
+
+    default void updateViewCountIncr(Long id) {
+        update(null, new LambdaUpdateWrapper<TutorDemandDO>()
+                .eq(TutorDemandDO::getId, id)
+                .setSql("view_count = view_count + 1"));
     }
 
 }

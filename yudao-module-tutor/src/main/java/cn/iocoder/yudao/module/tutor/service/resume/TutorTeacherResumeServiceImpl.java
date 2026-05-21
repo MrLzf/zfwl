@@ -159,6 +159,13 @@ public class TutorTeacherResumeServiceImpl implements TutorTeacherResumeService 
         return resume;
     }
 
+    @Override
+    public TutorTeacherResumeDO viewSquareResume(Long id) {
+        TutorTeacherResumeDO resume = getSquareResume(id);
+        resumeMapper.updateViewCountIncr(id);
+        return resumeMapper.selectById(id);
+    }
+
     private TutorTeacherResumeDO.TutorTeacherResumeDOBuilder buildResume(Long userId, TutorCityDO city,
                                                                          AppTutorTeacherResumeSaveReqVO reqVO) {
         return TutorTeacherResumeDO.builder()

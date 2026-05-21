@@ -22,6 +22,7 @@ import javax.annotation.Resource;
 import javax.validation.Valid;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -52,6 +53,7 @@ public class AppTutorSquareController {
                 })
                 .filter(respVO -> isWithinDistance(respVO.getDistanceKm(), pageReqVO.getDistanceKm()))
                 .collect(Collectors.toList());
+        sortByDistanceIfNeeded(list, pageReqVO.getSortType());
         return success(new PageResult<>(list, pageReqVO.getDistanceKm() == null ? pageResult.getTotal() : (long) list.size()));
     }
 
@@ -61,7 +63,7 @@ public class AppTutorSquareController {
     public CommonResult<AppTutorDemandRespVO> getDemand(@PathVariable("id") Long id,
                                                         BigDecimal longitude,
                                                         BigDecimal latitude) {
-        TutorDemandDO demand = demandService.getSquareDemand(id);
+        TutorDemandDO demand = demandService.viewSquareDemand(id);
         AppTutorDemandRespVO respVO = AppTutorDemandController.convert(demand);
         respVO.setDistanceKm(calculateDistance(longitude, latitude, demand.getLongitude(), demand.getLatitude()));
         return success(respVO);
@@ -81,6 +83,7 @@ public class AppTutorSquareController {
                 })
                 .filter(respVO -> isWithinDistance(respVO.getDistanceKm(), pageReqVO.getDistanceKm()))
                 .collect(Collectors.toList());
+        sortResumeByDistanceIfNeeded(list, pageReqVO.getSortType());
         return success(new PageResult<>(list, pageReqVO.getDistanceKm() == null ? pageResult.getTotal() : (long) list.size()));
     }
 
@@ -90,7 +93,7 @@ public class AppTutorSquareController {
     public CommonResult<AppTutorTeacherResumeRespVO> getResume(@PathVariable("id") Long id,
                                                                BigDecimal longitude,
                                                                BigDecimal latitude) {
-        TutorTeacherResumeDO resume = resumeService.getSquareResume(id);
+        TutorTeacherResumeDO resume = resumeService.viewSquareResume(id);
         AppTutorTeacherResumeRespVO respVO = AppTutorTeacherResumeController.convert(resume);
         respVO.setDistanceKm(calculateDistance(longitude, latitude, resume.getLongitude(), resume.getLatitude()));
         return success(respVO);
@@ -100,8 +103,24 @@ public class AppTutorSquareController {
         return maxDistanceKm == null || distanceKm == null || distanceKm.compareTo(BigDecimal.valueOf(maxDistanceKm)) <= 0;
     }
 
-    private static BigDecimal calculateDistance(BigDecimal fromLongitude, BigDecimal fromLatitude,
-                                                BigDecimal toLongitude, BigDecimal toLatitude) {
+    private static void sortByDistanceIfNeeded(List<AppTutorDemandRespVO> list, String sortType) {
+        if (!"distance".equals(sortType)) {
+            return;
+        }
+        list.sort(Comparator.comparing(AppTutorDemandRespVO::getDistanceKm,
+                Comparator.nullsLast(Comparator.naturalOrder())));
+    }
+
+    private static void sortResumeByDistanceIfNeeded(List<AppTutorTeacherResumeRespVO> list, String sortType) {
+        if (!"distance".equals(sortType)) {
+            return;
+        }
+        list.sort(Comparator.comparing(AppTutorTeacherResumeRespVO::getDistanceKm,
+                Comparator.nullsLast(Comparator.naturalOrder())));
+    }
+
+    public static BigDecimal calculateDistance(BigDecimal fromLongitude, BigDecimal fromLatitude,
+                                               BigDecimal toLongitude, BigDecimal toLatitude) {
         if (fromLongitude == null || fromLatitude == null || toLongitude == null || toLatitude == null
                 || Objects.equals(BigDecimal.ZERO, toLongitude) || Objects.equals(BigDecimal.ZERO, toLatitude)) {
             return null;
@@ -113,7 +132,7 @@ public class AppTutorSquareController {
         double haversine = Math.pow(Math.sin((toLat - fromLat) / 2), 2)
                 + Math.cos(fromLat) * Math.cos(toLat) * Math.pow(Math.sin((toLng - fromLng) / 2), 2);
         double distance = 2 * 6371.0 * Math.asin(Math.sqrt(haversine));
-        return BigDecimal.valueOf(distance).setScale(2, RoundingMode.HALF_UP);
+        return BigDecimal.valueOf(distance).setScale(1, RoundingMode.HALF_UP);
     }
 
 }

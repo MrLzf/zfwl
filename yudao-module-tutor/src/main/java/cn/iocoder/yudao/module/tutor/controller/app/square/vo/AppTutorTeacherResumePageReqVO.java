@@ -54,4 +54,7 @@ public class AppTutorTeacherResumePageReqVO extends PageParam {
     @Max(value = 500, message = "距离过大")
     private Integer distanceKm;
 
+    @Schema(description = "排序：default 综合排序，latest 最新，distance 距离最近", example = "distance")
+    private String sortType;
+
 }

@@ -160,6 +160,13 @@ public class TutorDemandServiceImpl implements TutorDemandService {
         return demand;
     }
 
+    @Override
+    public TutorDemandDO viewSquareDemand(Long id) {
+        TutorDemandDO demand = getSquareDemand(id);
+        demandMapper.updateViewCountIncr(id);
+        return demandMapper.selectById(id);
+    }
+
     private TutorDemandDO.TutorDemandDOBuilder buildDemand(Long userId, TutorCityDO city, AppTutorDemandSaveReqVO reqVO) {
         return TutorDemandDO.builder()
                 .userId(userId)

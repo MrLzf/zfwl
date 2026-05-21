@@ -27,4 +27,6 @@ public interface TutorTeacherResumeService {
 
     TutorTeacherResumeDO getSquareResume(Long id);
 
+    TutorTeacherResumeDO viewSquareResume(Long id);
+
 }

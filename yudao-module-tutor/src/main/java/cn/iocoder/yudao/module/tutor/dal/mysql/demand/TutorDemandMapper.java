@@ -66,4 +66,16 @@ public interface TutorDemandMapper extends BaseMapperX<TutorDemandDO> {
                 .setSql("view_count = view_count + 1"));
     }
 
+    default void updateContactViewCountIncr(Long id) {
+        update(null, new LambdaUpdateWrapper<TutorDemandDO>()
+                .eq(TutorDemandDO::getId, id)
+                .setSql("contact_view_count = contact_view_count + 1"));
+    }
+
+    default void updateMatchCountIncr(Long id) {
+        update(null, new LambdaUpdateWrapper<TutorDemandDO>()
+                .eq(TutorDemandDO::getId, id)
+                .setSql("match_count = match_count + 1"));
+    }
+
 }

@@ -64,4 +64,16 @@ public interface TutorTeacherResumeMapper extends BaseMapperX<TutorTeacherResume
                 .setSql("view_count = view_count + 1"));
     }
 
+    default void updateContactViewCountIncr(Long id) {
+        update(null, new LambdaUpdateWrapper<TutorTeacherResumeDO>()
+                .eq(TutorTeacherResumeDO::getId, id)
+                .setSql("contact_view_count = contact_view_count + 1"));
+    }
+
+    default void updateMatchCountIncr(Long id) {
+        update(null, new LambdaUpdateWrapper<TutorTeacherResumeDO>()
+                .eq(TutorTeacherResumeDO::getId, id)
+                .setSql("match_count = match_count + 1"));
+    }
+
 }

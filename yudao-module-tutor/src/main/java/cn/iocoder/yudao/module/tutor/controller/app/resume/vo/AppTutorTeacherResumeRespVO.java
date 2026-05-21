@@ -26,6 +26,7 @@ public class AppTutorTeacherResumeRespVO {
     private String cityName;
     private BigDecimal longitude;
     private BigDecimal latitude;
+    private BigDecimal distanceKm;
     private Integer serviceRadiusKm;
     private String contactMobileMask;
     private String contactWechatMask;

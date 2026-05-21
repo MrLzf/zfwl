@@ -2,7 +2,11 @@ package cn.iocoder.yudao.module.tutor.service.resume;
 
 import cn.hutool.core.util.DesensitizedUtil;
 import cn.hutool.core.util.StrUtil;
+import cn.iocoder.yudao.framework.common.pojo.PageResult;
+import cn.iocoder.yudao.module.tutor.controller.admin.publish.vo.AdminTutorPublishAuditReqVO;
+import cn.iocoder.yudao.module.tutor.controller.admin.resume.vo.AdminTutorTeacherResumePageReqVO;
 import cn.iocoder.yudao.module.tutor.controller.app.resume.vo.AppTutorTeacherResumeSaveReqVO;
+import cn.iocoder.yudao.module.tutor.controller.app.square.vo.AppTutorTeacherResumePageReqVO;
 import cn.iocoder.yudao.module.tutor.dal.dataobject.city.TutorCityDO;
 import cn.iocoder.yudao.module.tutor.dal.dataobject.resume.TutorTeacherResumeDO;
 import cn.iocoder.yudao.module.tutor.dal.dataobject.teacher.TutorTeacherProfileDO;
@@ -13,6 +17,7 @@ import cn.iocoder.yudao.module.tutor.service.city.TutorCityService;
 import cn.iocoder.yudao.module.tutor.service.teacher.TutorTeacherProfileService;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 
 import javax.annotation.Resource;
@@ -107,6 +112,51 @@ public class TutorTeacherResumeServiceImpl implements TutorTeacherResumeService 
     @Override
     public List<TutorTeacherResumeDO> getMyResumeList(Long userId) {
         return resumeMapper.selectListByUserId(userId);
+    }
+
+    @Override
+    public PageResult<TutorTeacherResumeDO> getResumePage(AdminTutorTeacherResumePageReqVO reqVO) {
+        return resumeMapper.selectPage(reqVO);
+    }
+
+    @Override
+    @Transactional
+    public TutorTeacherResumeDO auditResume(Long auditorId, AdminTutorPublishAuditReqVO reqVO) {
+        TutorTeacherResumeDO resume = resumeMapper.selectById(reqVO.getId());
+        if (resume == null) {
+            throw exception(RESUME_NOT_EXISTS);
+        }
+        if (TutorAuditStatusEnum.REJECTED.getStatus().equals(reqVO.getAuditStatus())
+                && StrUtil.isBlank(reqVO.getRejectReason())) {
+            throw exception(PUBLISH_AUDIT_REJECT_REASON_REQUIRED);
+        }
+        Integer publishStatus = TutorAuditStatusEnum.APPROVED.getStatus().equals(reqVO.getAuditStatus())
+                ? TutorPublishStatusEnum.SHOWING.getStatus() : TutorPublishStatusEnum.REJECTED.getStatus();
+        resumeMapper.update(null, new LambdaUpdateWrapper<TutorTeacherResumeDO>()
+                .eq(TutorTeacherResumeDO::getId, reqVO.getId())
+                .set(TutorTeacherResumeDO::getStatus, publishStatus)
+                .set(TutorTeacherResumeDO::getAuditStatus, reqVO.getAuditStatus())
+                .set(TutorTeacherResumeDO::getRejectReason, TutorAuditStatusEnum.REJECTED.getStatus().equals(reqVO.getAuditStatus())
+                        ? reqVO.getRejectReason() : null));
+        return resumeMapper.selectById(reqVO.getId());
+    }
+
+    @Override
+    public PageResult<TutorTeacherResumeDO> getSquareResumePage(AppTutorTeacherResumePageReqVO reqVO) {
+        return resumeMapper.selectSquarePage(reqVO);
+    }
+
+    @Override
+    public TutorTeacherResumeDO getSquareResume(Long id) {
+        TutorTeacherResumeDO resume = resumeMapper.selectById(id);
+        if (resume == null) {
+            throw exception(RESUME_NOT_EXISTS);
+        }
+        if (!TutorPublishStatusEnum.SHOWING.getStatus().equals(resume.getStatus())
+                || !TutorAuditStatusEnum.APPROVED.getStatus().equals(resume.getAuditStatus())) {
+            throw exception(PUBLISH_STATUS_NOT_VISIBLE);
+        }
+        return resume;
     }
 
     private TutorTeacherResumeDO.TutorTeacherResumeDOBuilder buildResume(Long userId, TutorCityDO city,

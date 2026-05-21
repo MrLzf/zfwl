@@ -2,7 +2,11 @@ package cn.iocoder.yudao.module.tutor.service.demand;
 
 import cn.hutool.core.util.DesensitizedUtil;
 import cn.hutool.core.util.StrUtil;
+import cn.iocoder.yudao.framework.common.pojo.PageResult;
+import cn.iocoder.yudao.module.tutor.controller.admin.demand.vo.AdminTutorDemandPageReqVO;
+import cn.iocoder.yudao.module.tutor.controller.admin.publish.vo.AdminTutorPublishAuditReqVO;
 import cn.iocoder.yudao.module.tutor.controller.app.demand.vo.AppTutorDemandSaveReqVO;
+import cn.iocoder.yudao.module.tutor.controller.app.square.vo.AppTutorDemandPageReqVO;
 import cn.iocoder.yudao.module.tutor.dal.dataobject.city.TutorCityDO;
 import cn.iocoder.yudao.module.tutor.dal.dataobject.demand.TutorDemandDO;
 import cn.iocoder.yudao.module.tutor.dal.dataobject.parent.TutorParentProfileDO;
@@ -13,6 +17,7 @@ import cn.iocoder.yudao.module.tutor.service.city.TutorCityService;
 import cn.iocoder.yudao.module.tutor.service.parent.TutorParentProfileService;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 
 import javax.annotation.Resource;
@@ -107,6 +112,52 @@ public class TutorDemandServiceImpl implements TutorDemandService {
     @Override
     public List<TutorDemandDO> getMyDemandList(Long userId) {
         return demandMapper.selectListByUserId(userId);
+    }
+
+    @Override
+    public PageResult<TutorDemandDO> getDemandPage(AdminTutorDemandPageReqVO reqVO) {
+        return demandMapper.selectPage(reqVO);
+    }
+
+    @Override
+    @Transactional
+    public TutorDemandDO auditDemand(Long auditorId, AdminTutorPublishAuditReqVO reqVO) {
+        TutorDemandDO demand = demandMapper.selectById(reqVO.getId());
+        if (demand == null) {
+            throw exception(DEMAND_NOT_EXISTS);
+        }
+        if (TutorAuditStatusEnum.REJECTED.getStatus().equals(reqVO.getAuditStatus())
+                && StrUtil.isBlank(reqVO.getRejectReason())) {
+            throw exception(PUBLISH_AUDIT_REJECT_REASON_REQUIRED);
+        }
+        Integer publishStatus = TutorAuditStatusEnum.APPROVED.getStatus().equals(reqVO.getAuditStatus())
+                ? TutorPublishStatusEnum.SHOWING.getStatus() : TutorPublishStatusEnum.REJECTED.getStatus();
+        demandMapper.update(null, new LambdaUpdateWrapper<TutorDemandDO>()
+                .eq(TutorDemandDO::getId, reqVO.getId())
+                .set(TutorDemandDO::getStatus, publishStatus)
+                .set(TutorDemandDO::getAuditStatus, reqVO.getAuditStatus())
+                .set(TutorDemandDO::getRejectReason, TutorAuditStatusEnum.REJECTED.getStatus().equals(reqVO.getAuditStatus())
+                        ? reqVO.getRejectReason() : null));
+        return demandMapper.selectById(reqVO.getId());
+    }
+
+    @Override
+    public PageResult<TutorDemandDO> getSquareDemandPage(AppTutorDemandPageReqVO reqVO) {
+        return demandMapper.selectSquarePage(reqVO);
+    }
+
+    @Override
+    public TutorDemandDO getSquareDemand(Long id) {
+        TutorDemandDO demand = demandMapper.selectById(id);
+        if (demand == null) {
+            throw exception(DEMAND_NOT_EXISTS);
+        }
+        if (!TutorPublishStatusEnum.SHOWING.getStatus().equals(demand.getStatus())
+                || !TutorAuditStatusEnum.APPROVED.getStatus().equals(demand.getAuditStatus())
+                || !demand.getExpireTime().isAfter(LocalDateTime.now())) {
+            throw exception(PUBLISH_STATUS_NOT_VISIBLE);
+        }
+        return demand;
     }
 
     private TutorDemandDO.TutorDemandDOBuilder buildDemand(Long userId, TutorCityDO city, AppTutorDemandSaveReqVO reqVO) {

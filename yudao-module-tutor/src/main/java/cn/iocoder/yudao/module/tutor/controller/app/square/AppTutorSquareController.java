@@ -22,7 +22,6 @@ import javax.annotation.Resource;
 import javax.validation.Valid;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -51,10 +50,8 @@ public class AppTutorSquareController {
                             demand.getLongitude(), demand.getLatitude()));
                     return respVO;
                 })
-                .filter(respVO -> isWithinDistance(respVO.getDistanceKm(), pageReqVO.getDistanceKm()))
                 .collect(Collectors.toList());
-        sortByDistanceIfNeeded(list, pageReqVO.getSortType());
-        return success(new PageResult<>(list, pageReqVO.getDistanceKm() == null ? pageResult.getTotal() : (long) list.size()));
+        return success(new PageResult<>(list, pageResult.getTotal()));
     }
 
     @GetMapping("/demands/{id}")
@@ -81,10 +78,8 @@ public class AppTutorSquareController {
                             resume.getLongitude(), resume.getLatitude()));
                     return respVO;
                 })
-                .filter(respVO -> isWithinDistance(respVO.getDistanceKm(), pageReqVO.getDistanceKm()))
                 .collect(Collectors.toList());
-        sortResumeByDistanceIfNeeded(list, pageReqVO.getSortType());
-        return success(new PageResult<>(list, pageReqVO.getDistanceKm() == null ? pageResult.getTotal() : (long) list.size()));
+        return success(new PageResult<>(list, pageResult.getTotal()));
     }
 
     @GetMapping("/resumes/{id}")
@@ -97,26 +92,6 @@ public class AppTutorSquareController {
         AppTutorTeacherResumeRespVO respVO = AppTutorTeacherResumeController.convert(resume);
         respVO.setDistanceKm(calculateDistance(longitude, latitude, resume.getLongitude(), resume.getLatitude()));
         return success(respVO);
-    }
-
-    private static boolean isWithinDistance(BigDecimal distanceKm, Integer maxDistanceKm) {
-        return maxDistanceKm == null || distanceKm == null || distanceKm.compareTo(BigDecimal.valueOf(maxDistanceKm)) <= 0;
-    }
-
-    private static void sortByDistanceIfNeeded(List<AppTutorDemandRespVO> list, String sortType) {
-        if (!"distance".equals(sortType)) {
-            return;
-        }
-        list.sort(Comparator.comparing(AppTutorDemandRespVO::getDistanceKm,
-                Comparator.nullsLast(Comparator.naturalOrder())));
-    }
-
-    private static void sortResumeByDistanceIfNeeded(List<AppTutorTeacherResumeRespVO> list, String sortType) {
-        if (!"distance".equals(sortType)) {
-            return;
-        }
-        list.sort(Comparator.comparing(AppTutorTeacherResumeRespVO::getDistanceKm,
-                Comparator.nullsLast(Comparator.naturalOrder())));
     }
 
     public static BigDecimal calculateDistance(BigDecimal fromLongitude, BigDecimal fromLatitude,

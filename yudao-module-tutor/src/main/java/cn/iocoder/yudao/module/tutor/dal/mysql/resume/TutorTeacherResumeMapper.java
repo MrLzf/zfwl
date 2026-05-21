@@ -8,6 +8,7 @@ import cn.iocoder.yudao.module.tutor.controller.app.square.vo.AppTutorTeacherRes
 import cn.iocoder.yudao.module.tutor.dal.dataobject.resume.TutorTeacherResumeDO;
 import cn.iocoder.yudao.module.tutor.enums.audit.TutorAuditStatusEnum;
 import cn.iocoder.yudao.module.tutor.enums.publish.TutorPublishStatusEnum;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import org.apache.ibatis.annotations.Mapper;
 
@@ -44,18 +45,18 @@ public interface TutorTeacherResumeMapper extends BaseMapperX<TutorTeacherResume
     }
 
     default PageResult<TutorTeacherResumeDO> selectSquarePage(AppTutorTeacherResumePageReqVO reqVO) {
-        return selectPage(reqVO, new LambdaQueryWrapperX<TutorTeacherResumeDO>()
-                .eq(TutorTeacherResumeDO::getStatus, TutorPublishStatusEnum.SHOWING.getStatus())
-                .eq(TutorTeacherResumeDO::getAuditStatus, TutorAuditStatusEnum.APPROVED.getStatus())
-                .eqIfPresent(TutorTeacherResumeDO::getCityCode, reqVO.getCityCode())
-                .likeIfPresent(TutorTeacherResumeDO::getSubjects, reqVO.getSubject())
-                .likeIfPresent(TutorTeacherResumeDO::getTeachModes, reqVO.getTeachMode() == null ? null : reqVO.getTeachMode().toString())
-                .geIfPresent(TutorTeacherResumeDO::getHourlyPrice, reqVO.getPriceMin())
-                .leIfPresent(TutorTeacherResumeDO::getHourlyPrice, reqVO.getPriceMax())
-                .eqIfPresent(TutorTeacherResumeDO::getFreeTrialEnabled, reqVO.getFreeTrialEnabled())
-                .orderByDesc(TutorTeacherResumeDO::getTopUntil)
-                .orderByDesc(TutorTeacherResumeDO::getUrgentUntil)
-                .orderByDesc(TutorTeacherResumeDO::getId));
+        QueryWrapper<TutorTeacherResumeDO> wrapper = new QueryWrapper<TutorTeacherResumeDO>()
+                .eq("status", TutorPublishStatusEnum.SHOWING.getStatus())
+                .eq("audit_status", TutorAuditStatusEnum.APPROVED.getStatus())
+                .eq(reqVO.getCityCode() != null, "city_code", reqVO.getCityCode())
+                .like(reqVO.getSubject() != null, "subjects", reqVO.getSubject())
+                .like(reqVO.getTeachMode() != null, "teach_modes", reqVO.getTeachMode() == null ? null : reqVO.getTeachMode().toString())
+                .ge(reqVO.getPriceMin() != null, "hourly_price", reqVO.getPriceMin())
+                .le(reqVO.getPriceMax() != null, "hourly_price", reqVO.getPriceMax())
+                .eq(reqVO.getFreeTrialEnabled() != null, "free_trial_enabled", reqVO.getFreeTrialEnabled());
+        cn.iocoder.yudao.module.tutor.dal.mysql.demand.TutorDemandMapper.appendDistanceConditionAndOrder(
+                wrapper, reqVO.getLongitude(), reqVO.getLatitude(), reqVO.getDistanceKm(), reqVO.getSortType());
+        return selectPage(reqVO, wrapper);
     }
 
     default void updateViewCountIncr(Long id) {

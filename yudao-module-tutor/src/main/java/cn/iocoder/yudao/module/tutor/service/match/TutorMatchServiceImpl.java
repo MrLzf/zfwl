@@ -9,14 +9,17 @@ import cn.iocoder.yudao.module.tutor.dal.mysql.resume.TutorTeacherResumeMapper;
 import cn.iocoder.yudao.module.tutor.enums.match.TutorMatchStatusEnum;
 import cn.iocoder.yudao.module.tutor.service.notify.TutorNotifyService;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.validation.annotation.Validated;
 
 import javax.annotation.Resource;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
 import static cn.iocoder.yudao.framework.common.exception.util.ServiceExceptionUtil.exception;
 import static cn.iocoder.yudao.module.tutor.enums.ErrorCodeConstants.MATCH_CONFIRM_FORBIDDEN;
@@ -26,6 +29,8 @@ import static cn.iocoder.yudao.module.tutor.enums.ErrorCodeConstants.MATCH_NOT_E
 @Validated
 public class TutorMatchServiceImpl implements TutorMatchService {
 
+    private static final String MATCH_LOCK_KEY_PREFIX = "tutor:match:confirm:";
+
     @Resource
     private TutorMatchRecordMapper matchRecordMapper;
     @Resource
@@ -34,10 +39,25 @@ public class TutorMatchServiceImpl implements TutorMatchService {
     private TutorTeacherResumeMapper resumeMapper;
     @Resource
     private TutorNotifyService tutorNotifyService;
+    @Resource
+    private RedissonClient redissonClient;
+    @Resource
+    private TransactionTemplate transactionTemplate;
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
     public TutorMatchRecordDO confirmMatch(Long userId, Long id) {
+        RLock lock = redissonClient.getLock(MATCH_LOCK_KEY_PREFIX + id);
+        lock.lock(10, TimeUnit.SECONDS);
+        try {
+            return transactionTemplate.execute(status -> confirmMatch0(userId, id));
+        } finally {
+            if (lock.isHeldByCurrentThread()) {
+                lock.unlock();
+            }
+        }
+    }
+
+    private TutorMatchRecordDO confirmMatch0(Long userId, Long id) {
         TutorMatchRecordDO match = matchRecordMapper.selectById(id);
         if (match == null) {
             throw exception(MATCH_NOT_EXISTS);

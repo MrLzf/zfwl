@@ -21,14 +21,17 @@ import cn.iocoder.yudao.module.tutor.enums.target.TutorTargetTypeEnum;
 import cn.iocoder.yudao.module.tutor.service.demand.TutorDemandService;
 import cn.iocoder.yudao.module.tutor.service.notify.TutorNotifyService;
 import cn.iocoder.yudao.module.tutor.service.resume.TutorTeacherResumeService;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.validation.annotation.Validated;
 
 import javax.annotation.Resource;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
 import static cn.iocoder.yudao.framework.common.exception.util.ServiceExceptionUtil.exception;
 import static cn.iocoder.yudao.module.tutor.enums.ErrorCodeConstants.CONTACT_POINT_NOT_ENOUGH;
@@ -40,6 +43,7 @@ public class TutorContactServiceImpl implements TutorContactService {
 
     private static final int VIEW_CONTACT_POINT_COST = 10;
     private static final String SAFETY_TIP = "请核验对方身份，线下见面选择公共场所，未确认前不要提前转账。";
+    private static final String CONTACT_LOCK_KEY_PREFIX = "tutor:contact:view:";
 
     @Resource
     private TutorContactViewRecordMapper contactViewRecordMapper;
@@ -59,10 +63,25 @@ public class TutorContactServiceImpl implements TutorContactService {
     private MemberPointApi memberPointApi;
     @Resource
     private TutorNotifyService tutorNotifyService;
+    @Resource
+    private RedissonClient redissonClient;
+    @Resource
+    private TransactionTemplate transactionTemplate;
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
     public AppTutorContactRespVO viewContact(Long viewerUserId, AppTutorTargetReqVO reqVO) {
+        RLock lock = redissonClient.getLock(buildContactLockKey(viewerUserId, reqVO.getTargetType(), reqVO.getTargetId()));
+        lock.lock(10, TimeUnit.SECONDS);
+        try {
+            return transactionTemplate.execute(status -> viewContact0(viewerUserId, reqVO));
+        } finally {
+            if (lock.isHeldByCurrentThread()) {
+                lock.unlock();
+            }
+        }
+    }
+
+    private AppTutorContactRespVO viewContact0(Long viewerUserId, AppTutorTargetReqVO reqVO) {
         LocalDateTime now = LocalDateTime.now();
         TutorContactViewRecordDO reusable = contactViewRecordMapper.selectReusable(viewerUserId, reqVO.getTargetType(), reqVO.getTargetId(), now);
         if (TutorTargetTypeEnum.isDemand(reqVO.getTargetType())) {
@@ -88,6 +107,34 @@ public class TutorContactServiceImpl implements TutorContactService {
             return buildResp(reqVO, resume.getUserId(), resume.getContactMobileEncrypt(), resume.getContactWechatEncrypt(), reusable != null);
         }
         throw exception(CONTACT_TARGET_NOT_EXISTS);
+    }
+
+    @Override
+    public AppTutorContactRespVO getReusableContact(Long viewerUserId, String targetType, Long targetId) {
+        if (viewerUserId == null) {
+            return null;
+        }
+        TutorContactViewRecordDO reusable = contactViewRecordMapper.selectReusable(viewerUserId, targetType, targetId, LocalDateTime.now());
+        if (reusable == null) {
+            return null;
+        }
+        if (TutorTargetTypeEnum.isDemand(targetType)) {
+            TutorDemandDO demand = demandMapper.selectById(targetId);
+            if (demand == null || !Objects.equals(demand.getUserId(), reusable.getTargetUserId())) {
+                return null;
+            }
+            return buildResp(targetType, targetId, demand.getUserId(), demand.getContactMobileEncrypt(),
+                    demand.getContactWechatEncrypt(), true);
+        }
+        if (TutorTargetTypeEnum.isResume(targetType)) {
+            TutorTeacherResumeDO resume = resumeMapper.selectById(targetId);
+            if (resume == null || !Objects.equals(resume.getUserId(), reusable.getTargetUserId())) {
+                return null;
+            }
+            return buildResp(targetType, targetId, resume.getUserId(), resume.getContactMobileEncrypt(),
+                    resume.getContactWechatEncrypt(), true);
+        }
+        return null;
     }
 
     @Override
@@ -144,8 +191,13 @@ public class TutorContactServiceImpl implements TutorContactService {
     }
 
     private AppTutorContactRespVO buildResp(AppTutorTargetReqVO reqVO, Long targetUserId, String mobile, String wechat, boolean reused) {
+        return buildResp(reqVO.getTargetType(), reqVO.getTargetId(), targetUserId, mobile, wechat, reused);
+    }
+
+    private AppTutorContactRespVO buildResp(String targetType, Long targetId, Long targetUserId, String mobile, String wechat,
+                                            boolean reused) {
         return AppTutorContactRespVO.builder()
-                .targetType(reqVO.getTargetType()).targetId(reqVO.getTargetId()).targetUserId(targetUserId)
+                .targetType(targetType).targetId(targetId).targetUserId(targetUserId)
                 .mobile(mobile).wechat(wechat).pointCost(reused ? 0 : VIEW_CONTACT_POINT_COST)
                 .reused(reused).safetyTip(SAFETY_TIP).build();
     }
@@ -154,6 +206,10 @@ public class TutorContactServiceImpl implements TutorContactService {
         if (Objects.equals(viewerUserId, targetUserId)) {
             throw exception(CONTACT_TARGET_NOT_EXISTS);
         }
+    }
+
+    private String buildContactLockKey(Long viewerUserId, String targetType, Long targetId) {
+        return CONTACT_LOCK_KEY_PREFIX + viewerUserId + ":" + targetType + ":" + targetId;
     }
 
 }

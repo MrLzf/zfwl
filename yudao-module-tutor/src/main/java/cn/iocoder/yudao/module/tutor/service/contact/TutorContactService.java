@@ -10,6 +10,7 @@ import java.util.List;
 
 public interface TutorContactService {
     AppTutorContactRespVO viewContact(Long viewerUserId, AppTutorTargetReqVO reqVO);
+    AppTutorContactRespVO getReusableContact(Long viewerUserId, String targetType, Long targetId);
     List<TutorContactViewRecordDO> getMyContactRecordList(Long viewerUserId);
     PageResult<TutorContactViewRecordDO> getContactPage(AdminTutorContactPageReqVO reqVO);
 }

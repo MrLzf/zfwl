@@ -1,10 +1,13 @@
 package cn.iocoder.yudao.module.tutor.service.match;
 
+import cn.iocoder.yudao.framework.common.pojo.PageResult;
+import cn.iocoder.yudao.module.tutor.controller.admin.match.vo.AdminTutorMatchPageReqVO;
 import cn.iocoder.yudao.module.tutor.dal.dataobject.match.TutorMatchRecordDO;
 import cn.iocoder.yudao.module.tutor.dal.mysql.demand.TutorDemandMapper;
 import cn.iocoder.yudao.module.tutor.dal.mysql.match.TutorMatchRecordMapper;
 import cn.iocoder.yudao.module.tutor.dal.mysql.resume.TutorTeacherResumeMapper;
 import cn.iocoder.yudao.module.tutor.enums.match.TutorMatchStatusEnum;
+import cn.iocoder.yudao.module.tutor.service.notify.TutorNotifyService;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,6 +32,8 @@ public class TutorMatchServiceImpl implements TutorMatchService {
     private TutorDemandMapper demandMapper;
     @Resource
     private TutorTeacherResumeMapper resumeMapper;
+    @Resource
+    private TutorNotifyService tutorNotifyService;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -58,12 +63,21 @@ public class TutorMatchServiceImpl implements TutorMatchService {
             incrementPublishMatchCount(match);
         }
         matchRecordMapper.update(null, updateWrapper);
-        return matchRecordMapper.selectById(id);
+        TutorMatchRecordDO updatedMatch = matchRecordMapper.selectById(id);
+        if (TutorMatchStatusEnum.BOTH_CONFIRMED.getStatus().equals(status) && match.getMatchedTime() == null) {
+            tutorNotifyService.sendMatchSuccess(updatedMatch.getParentUserId(), updatedMatch.getTeacherUserId(), updatedMatch.getId());
+        }
+        return updatedMatch;
     }
 
     @Override
     public List<TutorMatchRecordDO> getMyMatchList(Long userId) {
         return matchRecordMapper.selectListByUserId(userId);
+    }
+
+    @Override
+    public PageResult<TutorMatchRecordDO> getMatchPage(AdminTutorMatchPageReqVO reqVO) {
+        return matchRecordMapper.selectPage(reqVO);
     }
 
     private Integer calculateStatus(TutorMatchRecordDO match, boolean parent, boolean teacher) {

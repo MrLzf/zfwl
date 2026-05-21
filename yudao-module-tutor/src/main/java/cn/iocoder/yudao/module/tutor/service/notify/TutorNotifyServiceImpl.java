@@ -1,0 +1,92 @@
+package cn.iocoder.yudao.module.tutor.service.notify;
+
+import cn.iocoder.yudao.module.system.api.notify.NotifyMessageSendApi;
+import cn.iocoder.yudao.module.system.api.notify.dto.NotifySendSingleToUserReqDTO;
+import cn.iocoder.yudao.module.tutor.enums.audit.TutorAuditStatusEnum;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+
+import javax.annotation.Resource;
+import java.util.HashMap;
+import java.util.Map;
+
+/**
+ * 家教站内信通知 Service 实现。
+ */
+@Service
+@Slf4j
+public class TutorNotifyServiceImpl implements TutorNotifyService {
+
+    private static final String TEMPLATE_CERTIFICATION_AUDIT = "tutor_certification_audit";
+    private static final String TEMPLATE_PUBLISH_AUDIT = "tutor_publish_audit";
+    private static final String TEMPLATE_POINT_CHANGED = "tutor_point_changed";
+    private static final String TEMPLATE_MATCH_SUCCESS = "tutor_match_success";
+    private static final String TEMPLATE_REVIEW_CREATED = "tutor_review_created";
+
+    @Resource
+    private NotifyMessageSendApi notifyMessageSendApi;
+
+    @Override
+    public void sendCertificationAuditResult(Long userId, Integer status, String rejectReason) {
+        Map<String, Object> params = new HashMap<>();
+        params.put("status", getAuditStatusName(status));
+        params.put("reason", rejectReason == null ? "" : rejectReason);
+        send(userId, TEMPLATE_CERTIFICATION_AUDIT, params);
+    }
+
+    @Override
+    public void sendPublishAuditResult(Long userId, String publishType, String title, Integer auditStatus, String rejectReason) {
+        Map<String, Object> params = new HashMap<>();
+        params.put("publishType", publishType);
+        params.put("title", title);
+        params.put("status", getAuditStatusName(auditStatus));
+        params.put("reason", rejectReason == null ? "" : rejectReason);
+        send(userId, TEMPLATE_PUBLISH_AUDIT, params);
+    }
+
+    @Override
+    public void sendPointChanged(Long userId, String scene, Integer point) {
+        Map<String, Object> params = new HashMap<>();
+        params.put("scene", scene);
+        params.put("point", point);
+        send(userId, TEMPLATE_POINT_CHANGED, params);
+    }
+
+    @Override
+    public void sendMatchSuccess(Long parentUserId, Long teacherUserId, Long matchId) {
+        Map<String, Object> params = new HashMap<>();
+        params.put("matchId", matchId);
+        send(parentUserId, TEMPLATE_MATCH_SUCCESS, params);
+        send(teacherUserId, TEMPLATE_MATCH_SUCCESS, params);
+    }
+
+    @Override
+    public void sendReviewCreated(Long targetUserId, Long reviewerUserId, Integer rating) {
+        Map<String, Object> params = new HashMap<>();
+        params.put("reviewerUserId", reviewerUserId);
+        params.put("rating", rating);
+        send(targetUserId, TEMPLATE_REVIEW_CREATED, params);
+    }
+
+    private void send(Long userId, String templateCode, Map<String, Object> params) {
+        try {
+            NotifySendSingleToUserReqDTO reqDTO = new NotifySendSingleToUserReqDTO();
+            reqDTO.setUserId(userId);
+            reqDTO.setTemplateCode(templateCode);
+            reqDTO.setTemplateParams(params);
+            notifyMessageSendApi.sendSingleMessageToMember(reqDTO);
+        } catch (Exception ex) {
+            log.warn("[send][userId({}) templateCode({}) params({}) 家教站内信发送失败]", userId, templateCode, params, ex);
+        }
+    }
+
+    private String getAuditStatusName(Integer status) {
+        for (TutorAuditStatusEnum statusEnum : TutorAuditStatusEnum.values()) {
+            if (statusEnum.getStatus().equals(status)) {
+                return statusEnum.getName();
+            }
+        }
+        return "未知";
+    }
+
+}

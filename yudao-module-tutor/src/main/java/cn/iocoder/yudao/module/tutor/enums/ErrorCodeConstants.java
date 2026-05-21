@@ -50,5 +50,6 @@ public interface ErrorCodeConstants {
     ErrorCode FAVORITE_COUNT_EXCEED = new ErrorCode(1_040_006_000, "收藏数量已达上限");
     ErrorCode REVIEW_NOT_ALLOWED = new ErrorCode(1_040_006_001, "当前匹配状态暂不可评价");
     ErrorCode REVIEW_EXISTS = new ErrorCode(1_040_006_002, "已评价，请勿重复提交");
+    ErrorCode REVIEW_NOT_EXISTS = new ErrorCode(1_040_006_003, "评价不存在");
 
 }

@@ -14,6 +14,7 @@ import cn.iocoder.yudao.module.tutor.dal.mysql.demand.TutorDemandMapper;
 import cn.iocoder.yudao.module.tutor.enums.audit.TutorAuditStatusEnum;
 import cn.iocoder.yudao.module.tutor.enums.publish.TutorPublishStatusEnum;
 import cn.iocoder.yudao.module.tutor.service.city.TutorCityService;
+import cn.iocoder.yudao.module.tutor.service.notify.TutorNotifyService;
 import cn.iocoder.yudao.module.tutor.service.parent.TutorParentProfileService;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import org.springframework.stereotype.Service;
@@ -43,6 +44,8 @@ public class TutorDemandServiceImpl implements TutorDemandService {
     private TutorParentProfileService parentProfileService;
     @Resource
     private TutorCityService cityService;
+    @Resource
+    private TutorNotifyService tutorNotifyService;
 
     @Override
     public TutorDemandDO createDemand(Long userId, AppTutorDemandSaveReqVO reqVO) {
@@ -138,7 +141,10 @@ public class TutorDemandServiceImpl implements TutorDemandService {
                 .set(TutorDemandDO::getAuditStatus, reqVO.getAuditStatus())
                 .set(TutorDemandDO::getRejectReason, TutorAuditStatusEnum.REJECTED.getStatus().equals(reqVO.getAuditStatus())
                         ? reqVO.getRejectReason() : null));
-        return demandMapper.selectById(reqVO.getId());
+        TutorDemandDO updatedDemand = demandMapper.selectById(reqVO.getId());
+        tutorNotifyService.sendPublishAuditResult(updatedDemand.getUserId(), "家长需求", updatedDemand.getTitle(),
+                updatedDemand.getAuditStatus(), updatedDemand.getRejectReason());
+        return updatedDemand;
     }
 
     @Override

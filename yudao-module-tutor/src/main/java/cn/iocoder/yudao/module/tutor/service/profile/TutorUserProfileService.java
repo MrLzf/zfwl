@@ -1,5 +1,7 @@
 package cn.iocoder.yudao.module.tutor.service.profile;
 
+import cn.iocoder.yudao.framework.common.pojo.PageResult;
+import cn.iocoder.yudao.module.tutor.controller.admin.profile.vo.AdminTutorUserProfilePageReqVO;
 import cn.iocoder.yudao.module.tutor.controller.app.profile.vo.AppTutorProfileInitReqVO;
 import cn.iocoder.yudao.module.tutor.controller.app.profile.vo.AppTutorProfileLocationUpdateReqVO;
 import cn.iocoder.yudao.module.tutor.dal.dataobject.profile.TutorUserProfileDO;
@@ -34,5 +36,7 @@ public interface TutorUserProfileService {
      * @return 用户档案
      */
     TutorUserProfileDO updateLocation(Long userId, AppTutorProfileLocationUpdateReqVO reqVO);
+
+    PageResult<TutorUserProfileDO> getProfilePage(AdminTutorUserProfilePageReqVO reqVO);
 
 }

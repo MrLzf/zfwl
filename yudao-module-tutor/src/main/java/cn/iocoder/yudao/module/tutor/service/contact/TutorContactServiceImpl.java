@@ -4,6 +4,8 @@ import cn.iocoder.yudao.module.member.api.point.MemberPointApi;
 import cn.iocoder.yudao.module.member.api.user.MemberUserApi;
 import cn.iocoder.yudao.module.member.api.user.dto.MemberUserRespDTO;
 import cn.iocoder.yudao.module.member.enums.point.MemberPointBizTypeEnum;
+import cn.iocoder.yudao.framework.common.pojo.PageResult;
+import cn.iocoder.yudao.module.tutor.controller.admin.contact.vo.AdminTutorContactPageReqVO;
 import cn.iocoder.yudao.module.tutor.controller.app.common.vo.AppTutorTargetReqVO;
 import cn.iocoder.yudao.module.tutor.controller.app.contact.vo.AppTutorContactRespVO;
 import cn.iocoder.yudao.module.tutor.dal.dataobject.contact.TutorContactViewRecordDO;
@@ -17,6 +19,7 @@ import cn.iocoder.yudao.module.tutor.dal.mysql.resume.TutorTeacherResumeMapper;
 import cn.iocoder.yudao.module.tutor.enums.match.TutorMatchStatusEnum;
 import cn.iocoder.yudao.module.tutor.enums.target.TutorTargetTypeEnum;
 import cn.iocoder.yudao.module.tutor.service.demand.TutorDemandService;
+import cn.iocoder.yudao.module.tutor.service.notify.TutorNotifyService;
 import cn.iocoder.yudao.module.tutor.service.resume.TutorTeacherResumeService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -54,6 +57,8 @@ public class TutorContactServiceImpl implements TutorContactService {
     private MemberUserApi memberUserApi;
     @Resource
     private MemberPointApi memberPointApi;
+    @Resource
+    private TutorNotifyService tutorNotifyService;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -90,6 +95,11 @@ public class TutorContactServiceImpl implements TutorContactService {
         return contactViewRecordMapper.selectListByViewerUserId(viewerUserId);
     }
 
+    @Override
+    public PageResult<TutorContactViewRecordDO> getContactPage(AdminTutorContactPageReqVO reqVO) {
+        return contactViewRecordMapper.selectPage(reqVO);
+    }
+
     private void deductPoint(Long viewerUserId, AppTutorTargetReqVO reqVO) {
         MemberUserRespDTO user = memberUserApi.getUser(viewerUserId);
         if (user == null || user.getPoint() == null || user.getPoint() < VIEW_CONTACT_POINT_COST) {
@@ -97,6 +107,7 @@ public class TutorContactServiceImpl implements TutorContactService {
         }
         memberPointApi.reducePoint(viewerUserId, VIEW_CONTACT_POINT_COST,
                 MemberPointBizTypeEnum.TUTOR_VIEW_CONTACT.getType(), reqVO.getTargetType() + ":" + reqVO.getTargetId());
+        tutorNotifyService.sendPointChanged(viewerUserId, "查看联系方式", -VIEW_CONTACT_POINT_COST);
     }
 
     private void createRecord(Long viewerUserId, Long targetUserId, AppTutorTargetReqVO reqVO) {

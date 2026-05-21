@@ -10,6 +10,7 @@ import cn.iocoder.yudao.module.tutor.dal.dataobject.certification.TutorCertifica
 import cn.iocoder.yudao.module.tutor.dal.dataobject.teacher.TutorTeacherProfileDO;
 import cn.iocoder.yudao.module.tutor.dal.mysql.certification.TutorCertificationMapper;
 import cn.iocoder.yudao.module.tutor.enums.audit.TutorAuditStatusEnum;
+import cn.iocoder.yudao.module.tutor.service.notify.TutorNotifyService;
 import cn.iocoder.yudao.module.tutor.service.teacher.TutorTeacherProfileService;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import org.springframework.stereotype.Service;
@@ -30,6 +31,8 @@ public class TutorCertificationServiceImpl implements TutorCertificationService 
     private TutorCertificationMapper certificationMapper;
     @Resource
     private TutorTeacherProfileService teacherProfileService;
+    @Resource
+    private TutorNotifyService tutorNotifyService;
 
     @Override
     public TutorCertificationDO getCertification(Long userId) {
@@ -103,7 +106,10 @@ public class TutorCertificationServiceImpl implements TutorCertificationService 
                 .set(TutorCertificationDO::getAuditorId, auditorId)
                 .set(TutorCertificationDO::getAuditTime, LocalDateTime.now()));
         teacherProfileService.updateCertificationStatus(certification.getUserId(), reqVO.getStatus());
-        return certificationMapper.selectById(reqVO.getId());
+        TutorCertificationDO updatedCertification = certificationMapper.selectById(reqVO.getId());
+        tutorNotifyService.sendCertificationAuditResult(updatedCertification.getUserId(), updatedCertification.getStatus(),
+                updatedCertification.getRejectReason());
+        return updatedCertification;
     }
 
     private String maskIdCard(String idCardNo) {

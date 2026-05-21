@@ -48,7 +48,7 @@ public class AppTutorReviewController {
                 .map(AppTutorReviewController::convert).collect(Collectors.toList()));
     }
 
-    private static AppTutorReviewRespVO convert(TutorReviewDO review) {
+    public static AppTutorReviewRespVO convert(TutorReviewDO review) {
         return AppTutorReviewRespVO.builder()
                 .id(review.getId()).matchId(review.getMatchId()).reviewerUserId(review.getReviewerUserId())
                 .targetUserId(review.getTargetUserId()).rating(review.getRating()).tags(review.getTags())

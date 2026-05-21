@@ -1,12 +1,19 @@
 package cn.iocoder.yudao.module.tutor.service.profile;
 
+import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.iocoder.yudao.framework.common.enums.CommonStatusEnum;
+import cn.iocoder.yudao.framework.common.pojo.PageResult;
+import cn.iocoder.yudao.module.member.api.user.MemberUserApi;
+import cn.iocoder.yudao.module.member.api.user.dto.MemberUserRespDTO;
+import cn.iocoder.yudao.module.tutor.controller.admin.profile.vo.AdminTutorUserProfilePageReqVO;
 import cn.iocoder.yudao.module.tutor.controller.app.profile.vo.AppTutorProfileInitReqVO;
 import cn.iocoder.yudao.module.tutor.controller.app.profile.vo.AppTutorProfileLocationUpdateReqVO;
 import cn.iocoder.yudao.module.tutor.dal.dataobject.city.TutorCityDO;
 import cn.iocoder.yudao.module.tutor.dal.dataobject.profile.TutorUserProfileDO;
+import cn.iocoder.yudao.module.tutor.dal.dataobject.teacher.TutorTeacherProfileDO;
 import cn.iocoder.yudao.module.tutor.dal.mysql.profile.TutorUserProfileMapper;
+import cn.iocoder.yudao.module.tutor.dal.mysql.teacher.TutorTeacherProfileMapper;
 import cn.iocoder.yudao.module.tutor.enums.profile.TutorUserRoleEnum;
 import cn.iocoder.yudao.module.tutor.service.city.TutorCityService;
 import org.springframework.stereotype.Service;
@@ -14,6 +21,10 @@ import org.springframework.validation.annotation.Validated;
 
 import javax.annotation.Resource;
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import static cn.iocoder.yudao.framework.common.exception.util.ServiceExceptionUtil.exception;
 import static cn.iocoder.yudao.module.tutor.enums.ErrorCodeConstants.PROFILE_NOT_EXISTS;
@@ -30,7 +41,11 @@ public class TutorUserProfileServiceImpl implements TutorUserProfileService {
     @Resource
     private TutorUserProfileMapper profileMapper;
     @Resource
+    private TutorTeacherProfileMapper teacherProfileMapper;
+    @Resource
     private TutorCityService cityService;
+    @Resource
+    private MemberUserApi memberUserApi;
 
     @Override
     public TutorUserProfileDO getProfile(Long userId) {
@@ -78,6 +93,44 @@ public class TutorUserProfileServiceImpl implements TutorUserProfileService {
         }
         profileMapper.updateById(updateObj);
         return profileMapper.selectById(profile.getId());
+    }
+
+    @Override
+    public PageResult<TutorUserProfileDO> getProfilePage(AdminTutorUserProfilePageReqVO reqVO) {
+        Set<Long> userIds = null;
+        if (StrUtil.isNotBlank(reqVO.getMobile())) {
+            MemberUserRespDTO user = memberUserApi.getUserByMobile(reqVO.getMobile());
+            if (user == null) {
+                return PageResult.empty();
+            }
+            userIds = new HashSet<>();
+            userIds.add(user.getId());
+        }
+        if (StrUtil.isNotBlank(reqVO.getNickname())) {
+            List<MemberUserRespDTO> users = memberUserApi.getUserListByNickname(reqVO.getNickname());
+            Set<Long> nicknameUserIds = users.stream().map(MemberUserRespDTO::getId).collect(Collectors.toSet());
+            userIds = intersectUserIds(userIds, nicknameUserIds);
+            if (CollUtil.isEmpty(userIds)) {
+                return PageResult.empty();
+            }
+        }
+        if (reqVO.getCertificationStatus() != null) {
+            List<TutorTeacherProfileDO> teacherProfiles = teacherProfileMapper.selectListByCertificationStatus(reqVO.getCertificationStatus());
+            Set<Long> certificationUserIds = teacherProfiles.stream().map(TutorTeacherProfileDO::getUserId).collect(Collectors.toSet());
+            userIds = intersectUserIds(userIds, certificationUserIds);
+            if (CollUtil.isEmpty(userIds)) {
+                return PageResult.empty();
+            }
+        }
+        return profileMapper.selectPage(reqVO, userIds);
+    }
+
+    private Set<Long> intersectUserIds(Set<Long> source, Set<Long> filter) {
+        if (source == null) {
+            return filter;
+        }
+        source.retainAll(filter);
+        return source;
     }
 
     private void validateRole(Integer role) {

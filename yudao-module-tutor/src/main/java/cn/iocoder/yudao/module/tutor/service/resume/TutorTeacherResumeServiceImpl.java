@@ -14,6 +14,7 @@ import cn.iocoder.yudao.module.tutor.dal.mysql.resume.TutorTeacherResumeMapper;
 import cn.iocoder.yudao.module.tutor.enums.audit.TutorAuditStatusEnum;
 import cn.iocoder.yudao.module.tutor.enums.publish.TutorPublishStatusEnum;
 import cn.iocoder.yudao.module.tutor.service.city.TutorCityService;
+import cn.iocoder.yudao.module.tutor.service.notify.TutorNotifyService;
 import cn.iocoder.yudao.module.tutor.service.teacher.TutorTeacherProfileService;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import org.springframework.stereotype.Service;
@@ -43,6 +44,8 @@ public class TutorTeacherResumeServiceImpl implements TutorTeacherResumeService 
     private TutorTeacherProfileService teacherProfileService;
     @Resource
     private TutorCityService cityService;
+    @Resource
+    private TutorNotifyService tutorNotifyService;
 
     @Override
     public TutorTeacherResumeDO createResume(Long userId, AppTutorTeacherResumeSaveReqVO reqVO) {
@@ -138,7 +141,10 @@ public class TutorTeacherResumeServiceImpl implements TutorTeacherResumeService 
                 .set(TutorTeacherResumeDO::getAuditStatus, reqVO.getAuditStatus())
                 .set(TutorTeacherResumeDO::getRejectReason, TutorAuditStatusEnum.REJECTED.getStatus().equals(reqVO.getAuditStatus())
                         ? reqVO.getRejectReason() : null));
-        return resumeMapper.selectById(reqVO.getId());
+        TutorTeacherResumeDO updatedResume = resumeMapper.selectById(reqVO.getId());
+        tutorNotifyService.sendPublishAuditResult(updatedResume.getUserId(), "教师简历", updatedResume.getTitle(),
+                updatedResume.getAuditStatus(), updatedResume.getRejectReason());
+        return updatedResume;
     }
 
     @Override

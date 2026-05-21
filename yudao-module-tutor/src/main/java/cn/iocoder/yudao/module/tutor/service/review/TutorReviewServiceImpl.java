@@ -1,7 +1,10 @@
 package cn.iocoder.yudao.module.tutor.service.review;
 
+import cn.iocoder.yudao.framework.common.pojo.PageResult;
 import cn.iocoder.yudao.module.member.api.point.MemberPointApi;
 import cn.iocoder.yudao.module.member.enums.point.MemberPointBizTypeEnum;
+import cn.iocoder.yudao.module.tutor.controller.admin.review.vo.AdminTutorReviewPageReqVO;
+import cn.iocoder.yudao.module.tutor.controller.admin.review.vo.AdminTutorReviewUpdateStatusReqVO;
 import cn.iocoder.yudao.module.tutor.controller.app.review.vo.AppTutorReviewCreateReqVO;
 import cn.iocoder.yudao.module.tutor.dal.dataobject.match.TutorMatchRecordDO;
 import cn.iocoder.yudao.module.tutor.dal.dataobject.resume.TutorTeacherResumeDO;
@@ -10,6 +13,7 @@ import cn.iocoder.yudao.module.tutor.dal.mysql.match.TutorMatchRecordMapper;
 import cn.iocoder.yudao.module.tutor.dal.mysql.resume.TutorTeacherResumeMapper;
 import cn.iocoder.yudao.module.tutor.dal.mysql.review.TutorReviewMapper;
 import cn.iocoder.yudao.module.tutor.enums.match.TutorMatchStatusEnum;
+import cn.iocoder.yudao.module.tutor.service.notify.TutorNotifyService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
@@ -37,6 +41,8 @@ public class TutorReviewServiceImpl implements TutorReviewService {
     private TutorTeacherResumeMapper resumeMapper;
     @Resource
     private MemberPointApi memberPointApi;
+    @Resource
+    private TutorNotifyService tutorNotifyService;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -64,9 +70,11 @@ public class TutorReviewServiceImpl implements TutorReviewService {
                 .status(0).build();
         reviewMapper.insert(review);
         updateResumeRatingIfNeeded(match, targetUserId, reqVO.getRating());
+        tutorNotifyService.sendReviewCreated(targetUserId, reviewerUserId, reqVO.getRating());
         if (reqVO.getRating() == 5) {
             memberPointApi.addPoint(targetUserId, FIVE_STAR_REWARD_POINT,
                     MemberPointBizTypeEnum.TUTOR_FIVE_STAR_REVIEW.getType(), String.valueOf(review.getId()));
+            tutorNotifyService.sendPointChanged(targetUserId, "五星好评奖励", FIVE_STAR_REWARD_POINT);
         }
         return review;
     }
@@ -79,6 +87,21 @@ public class TutorReviewServiceImpl implements TutorReviewService {
     @Override
     public List<TutorReviewDO> getTargetReviewList(Long targetUserId) {
         return reviewMapper.selectVisibleListByTargetUserId(targetUserId);
+    }
+
+    @Override
+    public PageResult<TutorReviewDO> getReviewPage(AdminTutorReviewPageReqVO reqVO) {
+        return reviewMapper.selectPage(reqVO);
+    }
+
+    @Override
+    public TutorReviewDO updateReviewStatus(AdminTutorReviewUpdateStatusReqVO reqVO) {
+        TutorReviewDO review = reviewMapper.selectById(reqVO.getId());
+        if (review == null) {
+            throw exception(REVIEW_NOT_EXISTS);
+        }
+        reviewMapper.updateById(TutorReviewDO.builder().id(reqVO.getId()).status(reqVO.getStatus()).build());
+        return reviewMapper.selectById(reqVO.getId());
     }
 
     private void updateResumeRatingIfNeeded(TutorMatchRecordDO match, Long targetUserId, Integer rating) {

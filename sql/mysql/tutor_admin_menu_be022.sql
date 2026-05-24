@@ -10,6 +10,14 @@ SET @tutor_parent_id := (
 INSERT INTO `system_menu` (`name`, `permission`, `type`, `sort`, `parent_id`, `path`, `icon`, `component`,
                            `component_name`, `status`, `visible`, `keep_alive`, `always_show`,
                            `creator`, `create_time`, `updater`, `update_time`, `deleted`)
+SELECT '数据概览', 'tutor:dashboard:query', 2, 1, @tutor_parent_id, 'dashboard', 'ep:data-line',
+       'tutor/dashboard/index', 'TutorDashboard', 0, b'1', b'1', b'1', 'admin', NOW(), 'admin', NOW(), b'0'
+WHERE @tutor_parent_id IS NOT NULL
+  AND NOT EXISTS (SELECT 1 FROM `system_menu` WHERE `parent_id` = @tutor_parent_id AND `path` = 'dashboard' AND `deleted` = b'0');
+
+INSERT INTO `system_menu` (`name`, `permission`, `type`, `sort`, `parent_id`, `path`, `icon`, `component`,
+                           `component_name`, `status`, `visible`, `keep_alive`, `always_show`,
+                           `creator`, `create_time`, `updater`, `update_time`, `deleted`)
 SELECT '用户档案', 'tutor:profile:query', 2, 10, @tutor_parent_id, 'profiles', 'ep:user',
        'tutor/profile/index', 'TutorProfile', 0, b'1', b'1', b'1', 'admin', NOW(), 'admin', NOW(), b'0'
 WHERE @tutor_parent_id IS NOT NULL
@@ -89,6 +97,17 @@ WHERE @tutor_demand_menu_id IS NOT NULL
       WHERE `parent_id` = @tutor_demand_menu_id AND `permission` = 'tutor:demand:audit' AND `deleted` = b'0'
   );
 
+INSERT INTO `system_menu` (`name`, `permission`, `type`, `sort`, `parent_id`, `path`, `icon`, `component`,
+                           `component_name`, `status`, `visible`, `keep_alive`, `always_show`,
+                           `creator`, `create_time`, `updater`, `update_time`, `deleted`)
+SELECT '需求下架', 'tutor:demand:offline', 3, 3, @tutor_demand_menu_id, '', '', '', NULL,
+       0, b'1', b'1', b'1', 'admin', NOW(), 'admin', NOW(), b'0'
+WHERE @tutor_demand_menu_id IS NOT NULL
+  AND NOT EXISTS (
+      SELECT 1 FROM `system_menu`
+      WHERE `parent_id` = @tutor_demand_menu_id AND `permission` = 'tutor:demand:offline' AND `deleted` = b'0'
+  );
+
 SET @tutor_resume_menu_id := (
     SELECT `id` FROM `system_menu`
     WHERE `parent_id` = @tutor_parent_id AND `path` = 'resume' AND `deleted` = b'0'
@@ -104,4 +123,15 @@ WHERE @tutor_resume_menu_id IS NOT NULL
   AND NOT EXISTS (
       SELECT 1 FROM `system_menu`
       WHERE `parent_id` = @tutor_resume_menu_id AND `permission` = 'tutor:resume:audit' AND `deleted` = b'0'
+  );
+
+INSERT INTO `system_menu` (`name`, `permission`, `type`, `sort`, `parent_id`, `path`, `icon`, `component`,
+                           `component_name`, `status`, `visible`, `keep_alive`, `always_show`,
+                           `creator`, `create_time`, `updater`, `update_time`, `deleted`)
+SELECT '简历下架', 'tutor:resume:offline', 3, 3, @tutor_resume_menu_id, '', '', '', NULL,
+       0, b'1', b'1', b'1', 'admin', NOW(), 'admin', NOW(), b'0'
+WHERE @tutor_resume_menu_id IS NOT NULL
+  AND NOT EXISTS (
+      SELECT 1 FROM `system_menu`
+      WHERE `parent_id` = @tutor_resume_menu_id AND `permission` = 'tutor:resume:offline' AND `deleted` = b'0'
   );

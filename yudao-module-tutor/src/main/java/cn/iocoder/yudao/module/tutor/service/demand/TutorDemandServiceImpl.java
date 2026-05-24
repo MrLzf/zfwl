@@ -113,6 +113,19 @@ public class TutorDemandServiceImpl implements TutorDemandService {
     }
 
     @Override
+    public TutorDemandDO offlineDemandByAdmin(Long id) {
+        TutorDemandDO demand = demandMapper.selectById(id);
+        if (demand == null) {
+            throw exception(DEMAND_NOT_EXISTS);
+        }
+        demandMapper.updateById(TutorDemandDO.builder()
+                .id(id)
+                .status(TutorPublishStatusEnum.OFFLINE.getStatus())
+                .build());
+        return demandMapper.selectById(id);
+    }
+
+    @Override
     public List<TutorDemandDO> getMyDemandList(Long userId) {
         return demandMapper.selectListByUserId(userId);
     }

@@ -48,4 +48,11 @@ public class AdminTutorTeacherResumeController {
         return success(AppTutorTeacherResumeController.convert(resumeService.auditResume(getLoginUserId(), reqVO)));
     }
 
+    @PutMapping("/offline")
+    @Operation(summary = "下架教师简历")
+    @PreAuthorize("@ss.hasPermission('tutor:resume:offline')")
+    public CommonResult<AppTutorTeacherResumeRespVO> offlineResume(@RequestParam("id") Long id) {
+        return success(AppTutorTeacherResumeController.convert(resumeService.offlineResumeByAdmin(id)));
+    }
+
 }

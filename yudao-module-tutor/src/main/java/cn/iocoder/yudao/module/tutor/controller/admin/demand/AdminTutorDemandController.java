@@ -47,4 +47,11 @@ public class AdminTutorDemandController {
         return success(AppTutorDemandController.convert(demandService.auditDemand(getLoginUserId(), reqVO)));
     }
 
+    @PutMapping("/offline")
+    @Operation(summary = "下架家长需求")
+    @PreAuthorize("@ss.hasPermission('tutor:demand:offline')")
+    public CommonResult<AppTutorDemandRespVO> offlineDemand(@RequestParam("id") Long id) {
+        return success(AppTutorDemandController.convert(demandService.offlineDemandByAdmin(id)));
+    }
+
 }

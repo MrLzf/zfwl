@@ -17,6 +17,8 @@ public interface TutorDemandService {
 
     void offlineDemand(Long userId, Long id);
 
+    TutorDemandDO offlineDemandByAdmin(Long id);
+
     List<TutorDemandDO> getMyDemandList(Long userId);
 
     PageResult<TutorDemandDO> getDemandPage(AdminTutorDemandPageReqVO reqVO);

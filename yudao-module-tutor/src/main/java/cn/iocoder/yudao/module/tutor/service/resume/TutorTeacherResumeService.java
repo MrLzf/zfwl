@@ -17,6 +17,8 @@ public interface TutorTeacherResumeService {
 
     void offlineResume(Long userId, Long id);
 
+    TutorTeacherResumeDO offlineResumeByAdmin(Long id);
+
     List<TutorTeacherResumeDO> getMyResumeList(Long userId);
 
     PageResult<TutorTeacherResumeDO> getResumePage(AdminTutorTeacherResumePageReqVO reqVO);

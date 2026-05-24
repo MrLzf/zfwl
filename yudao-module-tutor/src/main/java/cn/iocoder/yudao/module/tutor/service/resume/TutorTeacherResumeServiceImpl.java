@@ -113,6 +113,19 @@ public class TutorTeacherResumeServiceImpl implements TutorTeacherResumeService 
     }
 
     @Override
+    public TutorTeacherResumeDO offlineResumeByAdmin(Long id) {
+        TutorTeacherResumeDO resume = resumeMapper.selectById(id);
+        if (resume == null) {
+            throw exception(RESUME_NOT_EXISTS);
+        }
+        resumeMapper.updateById(TutorTeacherResumeDO.builder()
+                .id(id)
+                .status(TutorPublishStatusEnum.OFFLINE.getStatus())
+                .build());
+        return resumeMapper.selectById(id);
+    }
+
+    @Override
     public List<TutorTeacherResumeDO> getMyResumeList(Long userId) {
         return resumeMapper.selectListByUserId(userId);
     }

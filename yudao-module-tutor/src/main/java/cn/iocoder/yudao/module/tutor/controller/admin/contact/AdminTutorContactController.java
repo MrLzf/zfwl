@@ -24,6 +24,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import static cn.iocoder.yudao.framework.common.pojo.CommonResult.success;
+import static java.util.Collections.emptyMap;
 
 @Tag(name = "管理后台 - 家教联系记录")
 @RestController
@@ -46,7 +47,7 @@ public class AdminTutorContactController {
             userIds.add(record.getViewerUserId());
             userIds.add(record.getTargetUserId());
         });
-        Map<Long, MemberUserRespDTO> userMap = memberUserApi.getUserMap(userIds);
+        Map<Long, MemberUserRespDTO> userMap = userIds.isEmpty() ? emptyMap() : memberUserApi.getUserMap(userIds);
         return success(new PageResult<>(pageResult.getList().stream()
                 .map(record -> convert(record, userMap))
                 .collect(Collectors.toList()), pageResult.getTotal()));

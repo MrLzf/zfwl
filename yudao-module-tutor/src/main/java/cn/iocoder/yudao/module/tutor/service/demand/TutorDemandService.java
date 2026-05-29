@@ -31,4 +31,6 @@ public interface TutorDemandService {
 
     TutorDemandDO viewSquareDemand(Long id);
 
+    TutorDemandDO viewDemandForDetail(Long viewerUserId, Long id);
+
 }

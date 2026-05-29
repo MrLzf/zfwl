@@ -66,8 +66,8 @@ public class AppTutorDetailController {
     }
 
     private AppTutorDetailRespVO getDemandDetail(Long id, BigDecimal longitude, BigDecimal latitude) {
-        TutorDemandDO demand = demandService.viewSquareDemand(id);
         Long loginUserId = getLoginUserId();
+        TutorDemandDO demand = demandService.viewDemandForDetail(loginUserId, id);
         if (loginUserId != null) {
             browseHistoryService.recordBrowseHistory(loginUserId, TutorTargetTypeEnum.DEMAND.getType(), demand.getId(),
                     demand.getUserId(), demand.getTitle(), demand.getCityCode(), demand.getCityName());
@@ -86,8 +86,8 @@ public class AppTutorDetailController {
     }
 
     private AppTutorDetailRespVO getResumeDetail(Long id, BigDecimal longitude, BigDecimal latitude) {
-        TutorTeacherResumeDO resume = resumeService.viewSquareResume(id);
         Long loginUserId = getLoginUserId();
+        TutorTeacherResumeDO resume = resumeService.viewResumeForDetail(loginUserId, id);
         if (loginUserId != null) {
             browseHistoryService.recordBrowseHistory(loginUserId, TutorTargetTypeEnum.RESUME.getType(), resume.getId(),
                     resume.getUserId(), resume.getTitle(), resume.getCityCode(), resume.getCityName());

@@ -31,4 +31,6 @@ public interface TutorTeacherResumeService {
 
     TutorTeacherResumeDO viewSquareResume(Long id);
 
+    TutorTeacherResumeDO viewResumeForDetail(Long viewerUserId, Long id);
+
 }

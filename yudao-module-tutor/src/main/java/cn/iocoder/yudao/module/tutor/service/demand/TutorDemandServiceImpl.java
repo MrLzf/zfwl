@@ -173,17 +173,26 @@ public class TutorDemandServiceImpl implements TutorDemandService {
         if (demand == null) {
             throw exception(DEMAND_NOT_EXISTS);
         }
-        if (!TutorPublishStatusEnum.SHOWING.getStatus().equals(demand.getStatus())
-                || !TutorAuditStatusEnum.APPROVED.getStatus().equals(demand.getAuditStatus())
-                || !demand.getExpireTime().isAfter(LocalDateTime.now())) {
-            throw exception(PUBLISH_STATUS_NOT_VISIBLE);
-        }
+        validateSquareVisible(demand);
         return demand;
     }
 
     @Override
     public TutorDemandDO viewSquareDemand(Long id) {
         TutorDemandDO demand = getSquareDemand(id);
+        demandMapper.updateViewCountIncr(id);
+        return demandMapper.selectById(id);
+    }
+
+    @Override
+    public TutorDemandDO viewDemandForDetail(Long viewerUserId, Long id) {
+        TutorDemandDO demand = demandMapper.selectById(id);
+        if (demand == null) {
+            throw exception(DEMAND_NOT_EXISTS);
+        }
+        if (!Objects.equals(viewerUserId, demand.getUserId())) {
+            validateSquareVisible(demand);
+        }
         demandMapper.updateViewCountIncr(id);
         return demandMapper.selectById(id);
     }
@@ -218,6 +227,14 @@ public class TutorDemandServiceImpl implements TutorDemandService {
         parentReqVO.setTeachMode(reqVO.getTeachMode());
         parentReqVO.setRemark(reqVO.getDescription());
         parentProfileService.saveParentProfile(userId, parentReqVO);
+    }
+
+    private void validateSquareVisible(TutorDemandDO demand) {
+        if (!TutorPublishStatusEnum.SHOWING.getStatus().equals(demand.getStatus())
+                || !TutorAuditStatusEnum.APPROVED.getStatus().equals(demand.getAuditStatus())
+                || !demand.getExpireTime().isAfter(LocalDateTime.now())) {
+            throw exception(PUBLISH_STATUS_NOT_VISIBLE);
+        }
     }
 
     private TutorDemandDO validateDemandOwner(Long userId, Long id) {

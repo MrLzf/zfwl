@@ -7,7 +7,9 @@ import cn.iocoder.yudao.module.tutor.dal.dataobject.city.TutorCityDO;
 import cn.iocoder.yudao.module.tutor.dal.dataobject.demand.TutorDemandDO;
 import cn.iocoder.yudao.module.tutor.dal.dataobject.parent.TutorParentProfileDO;
 import cn.iocoder.yudao.module.tutor.dal.mysql.demand.TutorDemandMapper;
+import cn.iocoder.yudao.module.tutor.enums.audit.TutorAuditStatusEnum;
 import cn.iocoder.yudao.module.tutor.enums.publish.TutorTeachModeEnum;
+import cn.iocoder.yudao.module.tutor.enums.publish.TutorPublishStatusEnum;
 import cn.iocoder.yudao.module.tutor.service.city.TutorCityService;
 import cn.iocoder.yudao.module.tutor.service.notify.TutorNotifyService;
 import cn.iocoder.yudao.module.tutor.service.parent.TutorParentProfileService;
@@ -17,6 +19,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static cn.iocoder.yudao.framework.test.core.util.AssertUtils.assertServiceException;
+import static cn.iocoder.yudao.module.tutor.enums.ErrorCodeConstants.PUBLISH_STATUS_NOT_VISIBLE;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.eq;
@@ -60,6 +64,36 @@ class TutorDemandServiceImplTest extends BaseMockitoUnitTest {
         assertEquals(reqVO.getTeachMode(), parentReqVO.getTeachMode());
         assertEquals(reqVO.getDescription(), parentReqVO.getRemark());
         verify(demandMapper).insert(any(TutorDemandDO.class));
+    }
+
+    @Test
+    void viewDemandForDetail_whenOwnerAndWaitingAudit_returnsDemand() {
+        TutorDemandDO demand = TutorDemandDO.builder()
+                .id(11L)
+                .userId(100L)
+                .status(TutorPublishStatusEnum.WAIT_AUDIT.getStatus())
+                .auditStatus(TutorAuditStatusEnum.WAITING.getStatus())
+                .build();
+        when(demandMapper.selectById(11L)).thenReturn(demand);
+
+        TutorDemandDO result = demandService.viewDemandForDetail(100L, 11L);
+
+        assertEquals(demand, result);
+        verify(demandMapper).updateViewCountIncr(11L);
+    }
+
+    @Test
+    void viewDemandForDetail_whenNotOwnerAndWaitingAudit_throwsNotVisible() {
+        TutorDemandDO demand = TutorDemandDO.builder()
+                .id(11L)
+                .userId(100L)
+                .status(TutorPublishStatusEnum.WAIT_AUDIT.getStatus())
+                .auditStatus(TutorAuditStatusEnum.WAITING.getStatus())
+                .build();
+        when(demandMapper.selectById(11L)).thenReturn(demand);
+
+        assertServiceException(() -> demandService.viewDemandForDetail(200L, 11L),
+                PUBLISH_STATUS_NOT_VISIBLE);
     }
 
     private AppTutorDemandSaveReqVO buildDemandReqVO() {

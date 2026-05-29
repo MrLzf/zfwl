@@ -171,16 +171,26 @@ public class TutorTeacherResumeServiceImpl implements TutorTeacherResumeService 
         if (resume == null) {
             throw exception(RESUME_NOT_EXISTS);
         }
-        if (!TutorPublishStatusEnum.SHOWING.getStatus().equals(resume.getStatus())
-                || !TutorAuditStatusEnum.APPROVED.getStatus().equals(resume.getAuditStatus())) {
-            throw exception(PUBLISH_STATUS_NOT_VISIBLE);
-        }
+        validateSquareVisible(resume);
         return resume;
     }
 
     @Override
     public TutorTeacherResumeDO viewSquareResume(Long id) {
         TutorTeacherResumeDO resume = getSquareResume(id);
+        resumeMapper.updateViewCountIncr(id);
+        return resumeMapper.selectById(id);
+    }
+
+    @Override
+    public TutorTeacherResumeDO viewResumeForDetail(Long viewerUserId, Long id) {
+        TutorTeacherResumeDO resume = resumeMapper.selectById(id);
+        if (resume == null) {
+            throw exception(RESUME_NOT_EXISTS);
+        }
+        if (!Objects.equals(viewerUserId, resume.getUserId())) {
+            validateSquareVisible(resume);
+        }
         resumeMapper.updateViewCountIncr(id);
         return resumeMapper.selectById(id);
     }
@@ -215,6 +225,13 @@ public class TutorTeacherResumeServiceImpl implements TutorTeacherResumeService 
         }
         if (!TutorAuditStatusEnum.APPROVED.getStatus().equals(teacherProfile.getCertificationStatus())) {
             throw exception(CERTIFICATION_NOT_APPROVED);
+        }
+    }
+
+    private void validateSquareVisible(TutorTeacherResumeDO resume) {
+        if (!TutorPublishStatusEnum.SHOWING.getStatus().equals(resume.getStatus())
+                || !TutorAuditStatusEnum.APPROVED.getStatus().equals(resume.getAuditStatus())) {
+            throw exception(PUBLISH_STATUS_NOT_VISIBLE);
         }
     }
 

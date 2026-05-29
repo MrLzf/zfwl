@@ -6,10 +6,10 @@ import cn.iocoder.yudao.framework.common.pojo.PageResult;
 import cn.iocoder.yudao.module.tutor.controller.admin.demand.vo.AdminTutorDemandPageReqVO;
 import cn.iocoder.yudao.module.tutor.controller.admin.publish.vo.AdminTutorPublishAuditReqVO;
 import cn.iocoder.yudao.module.tutor.controller.app.demand.vo.AppTutorDemandSaveReqVO;
+import cn.iocoder.yudao.module.tutor.controller.app.parent.vo.AppTutorParentProfileSaveReqVO;
 import cn.iocoder.yudao.module.tutor.controller.app.square.vo.AppTutorDemandPageReqVO;
 import cn.iocoder.yudao.module.tutor.dal.dataobject.city.TutorCityDO;
 import cn.iocoder.yudao.module.tutor.dal.dataobject.demand.TutorDemandDO;
-import cn.iocoder.yudao.module.tutor.dal.dataobject.parent.TutorParentProfileDO;
 import cn.iocoder.yudao.module.tutor.dal.mysql.demand.TutorDemandMapper;
 import cn.iocoder.yudao.module.tutor.enums.audit.TutorAuditStatusEnum;
 import cn.iocoder.yudao.module.tutor.enums.publish.TutorPublishStatusEnum;
@@ -48,8 +48,9 @@ public class TutorDemandServiceImpl implements TutorDemandService {
     private TutorNotifyService tutorNotifyService;
 
     @Override
+    @Transactional
     public TutorDemandDO createDemand(Long userId, AppTutorDemandSaveReqVO reqVO) {
-        validateParentProfile(userId);
+        saveParentProfileFromDemand(userId, reqVO);
         validateActivePublishCount(userId);
         TutorCityDO city = cityService.validateCityOpened(reqVO.getCityCode());
         TutorDemandDO demand = buildDemand(userId, city, reqVO)
@@ -65,8 +66,9 @@ public class TutorDemandServiceImpl implements TutorDemandService {
     }
 
     @Override
+    @Transactional
     public TutorDemandDO updateDemand(Long userId, Long id, AppTutorDemandSaveReqVO reqVO) {
-        validateParentProfile(userId);
+        saveParentProfileFromDemand(userId, reqVO);
         TutorDemandDO demand = validateDemandOwner(userId, id);
         if (!ACTIVE_STATUSES.contains(demand.getStatus())) {
             validateActivePublishCount(userId);
@@ -207,11 +209,15 @@ public class TutorDemandServiceImpl implements TutorDemandService {
                 .contactWechatMask(maskWechat(reqVO.getContactWechat()));
     }
 
-    private void validateParentProfile(Long userId) {
-        TutorParentProfileDO parentProfile = parentProfileService.getParentProfile(userId);
-        if (parentProfile == null) {
-            throw exception(PARENT_PROFILE_NOT_EXISTS);
-        }
+    private void saveParentProfileFromDemand(Long userId, AppTutorDemandSaveReqVO reqVO) {
+        AppTutorParentProfileSaveReqVO parentReqVO = new AppTutorParentProfileSaveReqVO();
+        parentReqVO.setChildGrade(reqVO.getGrade());
+        parentReqVO.setSubjects(reqVO.getSubjects());
+        parentReqVO.setBudgetMin(reqVO.getBudgetMin());
+        parentReqVO.setBudgetMax(reqVO.getBudgetMax());
+        parentReqVO.setTeachMode(reqVO.getTeachMode());
+        parentReqVO.setRemark(reqVO.getDescription());
+        parentProfileService.saveParentProfile(userId, parentReqVO);
     }
 
     private TutorDemandDO validateDemandOwner(Long userId, Long id) {

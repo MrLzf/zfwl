@@ -42,10 +42,7 @@ public class TutorCertificationServiceImpl implements TutorCertificationService 
     @Override
     @Transactional
     public TutorCertificationDO submitCertification(Long userId, AppTutorCertificationSubmitReqVO reqVO) {
-        TutorTeacherProfileDO teacherProfile = teacherProfileService.getTeacherProfile(userId);
-        if (teacherProfile == null) {
-            throw exception(TEACHER_PROFILE_NOT_EXISTS);
-        }
+        TutorTeacherProfileDO teacherProfile = teacherProfileService.getOrCreateTeacherProfile(userId);
         TutorCertificationDO certification = certificationMapper.selectByUserId(userId);
         if (certification != null && TutorAuditStatusEnum.WAITING.getStatus().equals(certification.getStatus())) {
             throw exception(CERTIFICATION_PENDING);

@@ -33,6 +33,35 @@ public class TutorTeacherProfileServiceImpl implements TutorTeacherProfileServic
     }
 
     @Override
+    public TutorTeacherProfileDO getOrCreateTeacherProfile(Long userId) {
+        TutorTeacherProfileDO teacherProfile = teacherProfileMapper.selectByUserId(userId);
+        if (teacherProfile != null) {
+            return teacherProfile;
+        }
+        TutorUserProfileDO userProfile = validateTeacherRole(userId);
+        teacherProfile = TutorTeacherProfileDO.builder()
+                .userId(userId)
+                .profileId(userProfile.getId())
+                .educationLevel("")
+                .hasTeacherCertificate(false)
+                .subjects("")
+                .teachModes("")
+                .hourlyPriceMin(0)
+                .hourlyPriceMax(0)
+                .serviceRadiusKm(0)
+                .freeTrialEnabled(false)
+                .freeTrialMinutes(0)
+                .teachingYears(0)
+                .intro("")
+                .certificationStatus(TutorAuditStatusEnum.DRAFT.getStatus())
+                .ratingAvg(BigDecimal.ZERO)
+                .reviewCount(0)
+                .build();
+        teacherProfileMapper.insert(teacherProfile);
+        return teacherProfile;
+    }
+
+    @Override
     public TutorTeacherProfileDO saveTeacherProfile(Long userId, AppTutorTeacherProfileSaveReqVO reqVO) {
         TutorUserProfileDO userProfile = validateTeacherRole(userId);
         TutorTeacherProfileDO teacherProfile = teacherProfileMapper.selectByUserId(userId);

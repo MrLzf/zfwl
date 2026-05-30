@@ -7,6 +7,8 @@ public interface TutorTeacherProfileService {
 
     TutorTeacherProfileDO getTeacherProfile(Long userId);
 
+    TutorTeacherProfileDO getOrCreateTeacherProfile(Long userId);
+
     TutorTeacherProfileDO saveTeacherProfile(Long userId, AppTutorTeacherProfileSaveReqVO reqVO);
 
     void updateCertificationStatus(Long userId, Integer certificationStatus);

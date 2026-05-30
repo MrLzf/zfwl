@@ -14,12 +14,15 @@ import cn.iocoder.yudao.module.tutor.dal.dataobject.profile.TutorUserProfileDO;
 import cn.iocoder.yudao.module.tutor.dal.dataobject.teacher.TutorTeacherProfileDO;
 import cn.iocoder.yudao.module.tutor.dal.mysql.profile.TutorUserProfileMapper;
 import cn.iocoder.yudao.module.tutor.dal.mysql.teacher.TutorTeacherProfileMapper;
+import cn.iocoder.yudao.module.tutor.enums.audit.TutorAuditStatusEnum;
 import cn.iocoder.yudao.module.tutor.enums.profile.TutorUserRoleEnum;
 import cn.iocoder.yudao.module.tutor.service.city.TutorCityService;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 
 import javax.annotation.Resource;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
@@ -53,6 +56,7 @@ public class TutorUserProfileServiceImpl implements TutorUserProfileService {
     }
 
     @Override
+    @Transactional
     public TutorUserProfileDO initProfile(Long userId, AppTutorProfileInitReqVO reqVO) {
         TutorUserProfileDO profile = profileMapper.selectByUserId(userId);
         if (profile != null) {
@@ -69,6 +73,26 @@ public class TutorUserProfileServiceImpl implements TutorUserProfileService {
                 .status(CommonStatusEnum.ENABLE.getStatus())
                 .build();
         profileMapper.insert(profile);
+        if (TutorUserRoleEnum.TEACHER.getRole().equals(reqVO.getRole())) {
+            teacherProfileMapper.insert(TutorTeacherProfileDO.builder()
+                    .userId(userId)
+                    .profileId(profile.getId())
+                    .educationLevel("")
+                    .hasTeacherCertificate(false)
+                    .subjects("")
+                    .teachModes("")
+                    .hourlyPriceMin(0)
+                    .hourlyPriceMax(0)
+                    .serviceRadiusKm(0)
+                    .freeTrialEnabled(false)
+                    .freeTrialMinutes(0)
+                    .teachingYears(0)
+                    .intro("")
+                    .certificationStatus(TutorAuditStatusEnum.DRAFT.getStatus())
+                    .ratingAvg(BigDecimal.ZERO)
+                    .reviewCount(0)
+                    .build());
+        }
         return profile;
     }
 

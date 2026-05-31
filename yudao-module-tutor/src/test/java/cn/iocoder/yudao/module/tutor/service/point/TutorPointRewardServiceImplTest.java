@@ -48,7 +48,7 @@ class TutorPointRewardServiceImplTest extends BaseMockitoUnitTest {
         verify(memberPointApi).addPoint(100L, 20, MemberPointBizTypeEnum.TUTOR_PROFILE_INIT.getType(),
                 "profile_init");
         verify(tutorNotifyService).sendPointChanged(100L, "首次初始化身份档案", 20, 35,
-                "point", "reward", "profile_init", null, null);
+                "point", "point_records", "profile_init", null, null);
     }
 
     @Test

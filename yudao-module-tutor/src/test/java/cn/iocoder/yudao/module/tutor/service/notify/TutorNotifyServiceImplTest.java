@@ -105,9 +105,9 @@ class TutorNotifyServiceImplTest extends BaseMockitoUnitTest {
         verify(notifyMessageSendApi, times(2)).sendSingleMessageToMember(captor.capture());
         List<NotifySendSingleToUserReqDTO> requests = captor.getAllValues();
 
-        assertContactRequest(requests.get(0), 10L, "tutor_contact_viewer", "contact", "view", 11L,
+        assertContactRequest(requests.get(0), 10L, "tutor_contact_viewer", "contact", "contact_records", 11L,
                 "王老师", "高一数学辅导", false, "demand", 20L);
-        assertContactRequest(requests.get(1), 11L, "tutor_contact_owner", "contact", "viewed", 10L,
+        assertContactRequest(requests.get(1), 11L, "tutor_contact_owner", "contact", "contact_records", 10L,
                 "王老师", "高一数学辅导", false, "demand", 20L);
     }
 

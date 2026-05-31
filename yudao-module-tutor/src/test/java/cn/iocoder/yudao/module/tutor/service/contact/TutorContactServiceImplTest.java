@@ -74,6 +74,7 @@ class TutorContactServiceImplTest extends BaseMockitoUnitTest {
         MemberUserRespDTO viewer = new MemberUserRespDTO();
         viewer.setId(100L);
         viewer.setPoint(10);
+        viewer.setNickname("李家长");
         MemberUserRespDTO owner = new MemberUserRespDTO();
         owner.setId(200L);
         owner.setNickname("王老师");
@@ -99,8 +100,8 @@ class TutorContactServiceImplTest extends BaseMockitoUnitTest {
         verify(memberPointApi).reducePoint(eq(100L), eq(10),
                 eq(MemberPointBizTypeEnum.TUTOR_VIEW_CONTACT.getType()), eq("demand:11"));
         verify(tutorNotifyService).sendPointChanged(100L, "查看联系方式", -10, 0,
-                "point", "consume", "demand:11", "demand", 11L);
-        verify(tutorNotifyService).sendContactViewed(100L, 200L, "王老师", "高一数学辅导",
+                "point", "point_records", "demand:11", "demand", 11L);
+        verify(tutorNotifyService).sendContactViewed(100L, 200L, "李家长", "王老师", "高一数学辅导",
                 false, "demand", 11L);
         verify(contactViewRecordMapper).insert(any(TutorContactViewRecordDO.class));
         verify(demandMapper).updateContactViewCountIncr(11L);
@@ -114,6 +115,9 @@ class TutorContactServiceImplTest extends BaseMockitoUnitTest {
         TutorDemandDO demand = TutorDemandDO.builder()
                 .id(11L).userId(200L).title("高一数学辅导")
                 .contactMobileEncrypt("13800000000").contactWechatEncrypt("wechat").build();
+        MemberUserRespDTO viewer = new MemberUserRespDTO();
+        viewer.setId(100L);
+        viewer.setNickname("李家长");
         MemberUserRespDTO owner = new MemberUserRespDTO();
         owner.setId(200L);
         owner.setNickname("王老师");
@@ -127,13 +131,14 @@ class TutorContactServiceImplTest extends BaseMockitoUnitTest {
         when(contactViewRecordMapper.selectReusable(eq(100L), eq("demand"), eq(11L), any(LocalDateTime.class)))
                 .thenReturn(TutorContactViewRecordDO.builder().targetUserId(200L).build());
         when(demandService.getSquareDemand(11L)).thenReturn(demand);
+        when(memberUserApi.getUser(100L)).thenReturn(viewer);
         when(memberUserApi.getUser(200L)).thenReturn(owner);
 
         AppTutorContactRespVO respVO = contactService.viewContact(100L, reqVO);
 
         assertTrue(respVO.getReused());
         verify(memberPointApi, never()).reducePoint(anyLong(), anyInt(), anyInt(), anyString());
-        verify(tutorNotifyService).sendContactViewed(100L, 200L, "王老师", "高一数学辅导",
+        verify(tutorNotifyService).sendContactViewed(100L, 200L, "李家长", "王老师", "高一数学辅导",
                 true, "demand", 11L);
     }
 

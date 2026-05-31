@@ -46,7 +46,7 @@ public class TutorPointRewardServiceImpl implements TutorPointRewardService {
         memberPointApi.addPoint(userId, taskType.getPoint(), getMemberPointBizType(taskType).getType(), bizId);
         MemberUserRespDTO user = memberUserApi.getUser(userId);
         tutorNotifyService.sendPointChanged(userId, remark, taskType.getPoint(), user == null ? null : user.getPoint(),
-                "point", "reward", bizId, null, null);
+                "point", "point_records", bizId, null, null);
         return true;
     }
 

@@ -46,8 +46,7 @@ class TutorReviewServiceImplTest extends BaseMockitoUnitTest {
                 "10:reviewer", "五星评价奖励");
         verify(pointRewardService).reward(200L, TutorPointTaskTypeEnum.FIVE_STAR_REVIEW,
                 "10:target", "五星好评奖励");
-        verify(tutorNotifyService).sendPointChanged(100L, "五星评价奖励", 10);
-        verify(tutorNotifyService).sendPointChanged(200L, "五星好评奖励", 10);
+        verify(tutorNotifyService, never()).sendPointChanged(anyLong(), anyString(), anyInt());
     }
 
     @Test

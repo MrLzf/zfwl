@@ -47,7 +47,7 @@ class AdminTutorPointControllerTest extends BaseMockitoUnitTest {
         }
 
         verify(tutorNotifyService).sendPointChanged(100L, "后台积分调整", 10, 50,
-                "point", "adjust", "tutor:9:null", null, null);
+                "point", "point_records", "tutor:9:null", null, null);
     }
 
 }

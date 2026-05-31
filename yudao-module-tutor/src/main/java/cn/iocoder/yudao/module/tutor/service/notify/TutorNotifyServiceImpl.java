@@ -102,9 +102,16 @@ public class TutorNotifyServiceImpl implements TutorNotifyService {
     }
 
     @Override
+    public void sendContactViewed(Long viewerUserId, Long ownerUserId, String viewerName, String ownerName,
+                                  String contentTitle, Boolean reuse, String targetType, Long targetId) {
+        sendContactViewer(viewerUserId, ownerUserId, ownerName, contentTitle, reuse, targetType, targetId);
+        sendContactOwner(ownerUserId, viewerUserId, viewerName, contentTitle, reuse, targetType, targetId);
+    }
+
+    @Override
     public void sendContactViewer(Long viewerUserId, Long ownerUserId, String counterpartName, String contentTitle,
                                   Boolean reuse, String targetType, Long targetId) {
-        Map<String, Object> params = buildContactParams("view", ownerUserId, counterpartName, contentTitle, reuse,
+        Map<String, Object> params = buildContactParams("contact_records", ownerUserId, counterpartName, contentTitle, reuse,
                 targetType, targetId);
         send(viewerUserId, TEMPLATE_CONTACT_VIEWER, params);
     }
@@ -112,7 +119,7 @@ public class TutorNotifyServiceImpl implements TutorNotifyService {
     @Override
     public void sendContactOwner(Long ownerUserId, Long viewerUserId, String counterpartName, String contentTitle,
                                  Boolean reuse, String targetType, Long targetId) {
-        Map<String, Object> params = buildContactParams("viewed", viewerUserId, counterpartName, contentTitle, reuse,
+        Map<String, Object> params = buildContactParams("contact_records", viewerUserId, counterpartName, contentTitle, reuse,
                 targetType, targetId);
         send(ownerUserId, TEMPLATE_CONTACT_OWNER, params);
     }

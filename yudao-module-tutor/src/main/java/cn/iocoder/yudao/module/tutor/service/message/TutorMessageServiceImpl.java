@@ -32,7 +32,8 @@ public class TutorMessageServiceImpl implements TutorMessageService {
             AppTutorMessageSummaryRespVO.CategorySummary summary = new AppTutorMessageSummaryRespVO.CategorySummary();
             summary.setCategory(category);
             List<NotifyMessageDO> categoryMessages = filter(messages, category);
-            summary.setUnreadCount(categoryMessages.stream().filter(message -> !message.getReadStatus()).count());
+            summary.setUnreadCount(categoryMessages.stream()
+                    .filter(message -> !Boolean.TRUE.equals(message.getReadStatus())).count());
             if (!categoryMessages.isEmpty()) {
                 summary.setLatestContent(categoryMessages.get(0).getTemplateContent());
                 summary.setLatestTime(categoryMessages.get(0).getCreateTime());

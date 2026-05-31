@@ -31,8 +31,6 @@ import static cn.iocoder.yudao.module.tutor.enums.ErrorCodeConstants.*;
 @Validated
 public class TutorReviewServiceImpl implements TutorReviewService {
 
-    private static final int FIVE_STAR_REWARD_POINT = 10;
-
     @Resource
     private TutorReviewMapper reviewMapper;
     @Resource
@@ -76,8 +74,6 @@ public class TutorReviewServiceImpl implements TutorReviewService {
                     reqVO.getMatchId() + ":reviewer", "五星评价奖励");
             pointRewardService.reward(targetUserId, TutorPointTaskTypeEnum.FIVE_STAR_REVIEW,
                     reqVO.getMatchId() + ":target", "五星好评奖励");
-            tutorNotifyService.sendPointChanged(reviewerUserId, "五星评价奖励", FIVE_STAR_REWARD_POINT);
-            tutorNotifyService.sendPointChanged(targetUserId, "五星好评奖励", FIVE_STAR_REWARD_POINT);
         }
         return review;
     }

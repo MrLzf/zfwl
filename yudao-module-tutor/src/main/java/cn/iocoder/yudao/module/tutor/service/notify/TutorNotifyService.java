@@ -35,6 +35,9 @@ public interface TutorNotifyService {
     void sendContactViewed(Long viewerUserId, Long ownerUserId, String counterpartName, String contentTitle,
                            Boolean reuse, String targetType, Long targetId);
 
+    void sendContactViewed(Long viewerUserId, Long ownerUserId, String viewerName, String ownerName,
+                           String contentTitle, Boolean reuse, String targetType, Long targetId);
+
     void sendMatchSuccess(Long parentUserId, Long teacherUserId, Long matchId);
 
     void sendReviewCreated(Long targetUserId, Long reviewerUserId, Integer rating);

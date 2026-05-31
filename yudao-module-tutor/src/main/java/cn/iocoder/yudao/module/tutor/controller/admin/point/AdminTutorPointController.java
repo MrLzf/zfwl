@@ -62,7 +62,7 @@ public class AdminTutorPointController {
         }
         MemberUserRespDTO user = memberUserApi.getUser(reqVO.getUserId());
         tutorNotifyService.sendPointChanged(reqVO.getUserId(), "后台积分调整", reqVO.getPoint(),
-                user == null ? null : user.getPoint(), "point", "adjust", bizId, null, null);
+                user == null ? null : user.getPoint(), "point", "point_records", bizId, null, null);
         return success(true);
     }
 

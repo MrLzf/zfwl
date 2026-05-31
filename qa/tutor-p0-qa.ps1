@@ -351,6 +351,18 @@ try {
 
     Assert-Success (Invoke-QaRequest "parent contact records" "GET" "/app-api/tutor/contact/records" $ParentToken)
     Assert-Success (Invoke-QaRequest "parent point records" "GET" "/app-api/member/point/record/page?pageNo=1&pageSize=10" $ParentToken)
+    $parentMessageSummary = Assert-Success (Invoke-QaRequest "parent message summary" "GET" "/app-api/tutor/messages/summary" $ParentToken)
+    if ($null -eq $parentMessageSummary -or $null -eq $parentMessageSummary.categories) {
+        throw "Parent message summary categories are missing."
+    }
+    $parentContactMessages = Get-ListData (Assert-Success (Invoke-QaRequest "parent contact messages" "GET" "/app-api/tutor/messages/page?category=contact&pageNo=1&pageSize=10" $ParentToken))
+    Assert-Success (Invoke-QaRequest "parent point messages" "GET" "/app-api/tutor/messages/page?category=point&pageNo=1&pageSize=10" $ParentToken)
+    Assert-Success (Invoke-QaRequest "teacher audit messages" "GET" "/app-api/tutor/messages/page?category=audit&pageNo=1&pageSize=10" $TeacherToken)
+    if ($parentContactMessages.Count -gt 0) {
+        Assert-Success (Invoke-QaRequest "parent read contact message" "PUT" "/app-api/tutor/messages/read?id=$($parentContactMessages[0].id)" $ParentToken)
+    }
+    Assert-Success (Invoke-QaRequest "parent read all contact messages" "PUT" "/app-api/tutor/messages/read-all?category=contact" $ParentToken)
+    Assert-Success (Invoke-QaRequest "parent read all tutor messages" "PUT" "/app-api/tutor/messages/read-all" $ParentToken)
     Assert-Success (Invoke-QaRequest "admin contact page" "GET" "/admin-api/tutor/contacts/page?pageNo=1&pageSize=10" $AdminToken)
     Assert-Success (Invoke-QaRequest "admin match page" "GET" "/admin-api/tutor/matches/page?pageNo=1&pageSize=10" $AdminToken)
     Assert-Success (Invoke-QaRequest "admin review page" "GET" "/admin-api/tutor/reviews/page?pageNo=1&pageSize=10" $AdminToken)

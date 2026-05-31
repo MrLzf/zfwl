@@ -1,8 +1,6 @@
 package cn.iocoder.yudao.module.tutor.service.review;
 
 import cn.iocoder.yudao.framework.common.pojo.PageResult;
-import cn.iocoder.yudao.module.member.api.point.MemberPointApi;
-import cn.iocoder.yudao.module.member.enums.point.MemberPointBizTypeEnum;
 import cn.iocoder.yudao.module.tutor.controller.admin.review.vo.AdminTutorReviewPageReqVO;
 import cn.iocoder.yudao.module.tutor.controller.admin.review.vo.AdminTutorReviewUpdateStatusReqVO;
 import cn.iocoder.yudao.module.tutor.controller.app.review.vo.AppTutorReviewCreateReqVO;
@@ -13,7 +11,9 @@ import cn.iocoder.yudao.module.tutor.dal.mysql.match.TutorMatchRecordMapper;
 import cn.iocoder.yudao.module.tutor.dal.mysql.resume.TutorTeacherResumeMapper;
 import cn.iocoder.yudao.module.tutor.dal.mysql.review.TutorReviewMapper;
 import cn.iocoder.yudao.module.tutor.enums.match.TutorMatchStatusEnum;
+import cn.iocoder.yudao.module.tutor.enums.point.TutorPointTaskTypeEnum;
 import cn.iocoder.yudao.module.tutor.service.notify.TutorNotifyService;
+import cn.iocoder.yudao.module.tutor.service.point.TutorPointRewardService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
@@ -40,7 +40,7 @@ public class TutorReviewServiceImpl implements TutorReviewService {
     @Resource
     private TutorTeacherResumeMapper resumeMapper;
     @Resource
-    private MemberPointApi memberPointApi;
+    private TutorPointRewardService pointRewardService;
     @Resource
     private TutorNotifyService tutorNotifyService;
 
@@ -72,8 +72,11 @@ public class TutorReviewServiceImpl implements TutorReviewService {
         updateResumeRatingIfNeeded(match, targetUserId, reqVO.getRating());
         tutorNotifyService.sendReviewCreated(targetUserId, reviewerUserId, reqVO.getRating());
         if (reqVO.getRating() == 5) {
-            memberPointApi.addPoint(targetUserId, FIVE_STAR_REWARD_POINT,
-                    MemberPointBizTypeEnum.TUTOR_FIVE_STAR_REVIEW.getType(), String.valueOf(review.getId()));
+            pointRewardService.reward(reviewerUserId, TutorPointTaskTypeEnum.FIVE_STAR_REVIEW,
+                    reqVO.getMatchId() + ":reviewer", "五星评价奖励");
+            pointRewardService.reward(targetUserId, TutorPointTaskTypeEnum.FIVE_STAR_REVIEW,
+                    reqVO.getMatchId() + ":target", "五星好评奖励");
+            tutorNotifyService.sendPointChanged(reviewerUserId, "五星评价奖励", FIVE_STAR_REWARD_POINT);
             tutorNotifyService.sendPointChanged(targetUserId, "五星好评奖励", FIVE_STAR_REWARD_POINT);
         }
         return review;

@@ -27,6 +27,8 @@ public enum MemberPointBizTypeEnum implements ArrayValuable<Integer> {
     ORDER_GIVE_CANCEL(22, "订单积分奖励（整单取消）", "订单取消，退还 {} 积分", false), // ORDER_GIVE 的取消
     ORDER_GIVE_CANCEL_ITEM(23, "订单积分奖励（单个退款）", "订单退款，扣除赠送的 {} 积分", false), // ORDER_GIVE 的取消
 
+    TUTOR_PROFILE_INIT(101, "家教身份档案奖励", "首次选择家教身份获得 {} 积分", true),
+    TUTOR_ROLE_PROFILE_COMPLETE(102, "家教资料完善奖励", "首次完善家教资料获得 {} 积分", true),
     TUTOR_FIVE_STAR_REVIEW(104, "家教五星好评奖励", "家教五星好评获得 {} 积分", true),
     TUTOR_VIEW_CONTACT(201, "家教查看联系方式", "家教查看联系方式使用 {} 积分", false)
     ;

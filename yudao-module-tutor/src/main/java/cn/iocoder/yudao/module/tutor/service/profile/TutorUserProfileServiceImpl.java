@@ -16,7 +16,9 @@ import cn.iocoder.yudao.module.tutor.dal.mysql.profile.TutorUserProfileMapper;
 import cn.iocoder.yudao.module.tutor.dal.mysql.teacher.TutorTeacherProfileMapper;
 import cn.iocoder.yudao.module.tutor.enums.audit.TutorAuditStatusEnum;
 import cn.iocoder.yudao.module.tutor.enums.profile.TutorUserRoleEnum;
+import cn.iocoder.yudao.module.tutor.enums.point.TutorPointTaskTypeEnum;
 import cn.iocoder.yudao.module.tutor.service.city.TutorCityService;
+import cn.iocoder.yudao.module.tutor.service.point.TutorPointRewardService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
@@ -49,6 +51,8 @@ public class TutorUserProfileServiceImpl implements TutorUserProfileService {
     private TutorCityService cityService;
     @Resource
     private MemberUserApi memberUserApi;
+    @Resource
+    private TutorPointRewardService pointRewardService;
 
     @Override
     public TutorUserProfileDO getProfile(Long userId) {
@@ -93,6 +97,8 @@ public class TutorUserProfileServiceImpl implements TutorUserProfileService {
                     .reviewCount(0)
                     .build());
         }
+        pointRewardService.reward(userId, TutorPointTaskTypeEnum.PROFILE_INIT,
+                "profile_init", "首次初始化身份档案");
         return profile;
     }
 

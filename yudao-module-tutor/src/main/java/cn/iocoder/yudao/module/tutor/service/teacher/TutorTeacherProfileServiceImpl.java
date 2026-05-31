@@ -6,8 +6,11 @@ import cn.iocoder.yudao.module.tutor.dal.dataobject.teacher.TutorTeacherProfileD
 import cn.iocoder.yudao.module.tutor.dal.mysql.teacher.TutorTeacherProfileMapper;
 import cn.iocoder.yudao.module.tutor.enums.audit.TutorAuditStatusEnum;
 import cn.iocoder.yudao.module.tutor.enums.profile.TutorUserRoleEnum;
+import cn.iocoder.yudao.module.tutor.enums.point.TutorPointTaskTypeEnum;
+import cn.iocoder.yudao.module.tutor.service.point.TutorPointRewardService;
 import cn.iocoder.yudao.module.tutor.service.profile.TutorUserProfileService;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 
 import javax.annotation.Resource;
@@ -26,6 +29,8 @@ public class TutorTeacherProfileServiceImpl implements TutorTeacherProfileServic
     private TutorTeacherProfileMapper teacherProfileMapper;
     @Resource
     private TutorUserProfileService userProfileService;
+    @Resource
+    private TutorPointRewardService pointRewardService;
 
     @Override
     public TutorTeacherProfileDO getTeacherProfile(Long userId) {
@@ -62,6 +67,7 @@ public class TutorTeacherProfileServiceImpl implements TutorTeacherProfileServic
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public TutorTeacherProfileDO saveTeacherProfile(Long userId, AppTutorTeacherProfileSaveReqVO reqVO) {
         TutorUserProfileDO userProfile = validateTeacherRole(userId);
         TutorTeacherProfileDO teacherProfile = teacherProfileMapper.selectByUserId(userId);
@@ -87,6 +93,7 @@ public class TutorTeacherProfileServiceImpl implements TutorTeacherProfileServic
                     .reviewCount(0)
                     .build();
             teacherProfileMapper.insert(teacherProfile);
+            rewardRoleProfileCompletionIfNeeded(userId);
             return teacherProfile;
         }
 
@@ -108,7 +115,15 @@ public class TutorTeacherProfileServiceImpl implements TutorTeacherProfileServic
                 .intro(reqVO.getIntro())
                 .build();
         teacherProfileMapper.updateById(updateObj);
+        rewardRoleProfileCompletionIfNeeded(userId);
         return teacherProfileMapper.selectById(teacherProfile.getId());
+    }
+
+    private void rewardRoleProfileCompletionIfNeeded(Long userId) {
+        if (!pointRewardService.hasReward(userId, TutorPointTaskTypeEnum.ROLE_PROFILE_COMPLETE)) {
+            pointRewardService.reward(userId, TutorPointTaskTypeEnum.ROLE_PROFILE_COMPLETE,
+                    "role_profile_complete", "首次完善资料");
+        }
     }
 
     @Override

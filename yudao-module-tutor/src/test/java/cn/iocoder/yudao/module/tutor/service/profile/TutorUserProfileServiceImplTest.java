@@ -8,7 +8,9 @@ import cn.iocoder.yudao.module.tutor.dal.mysql.profile.TutorUserProfileMapper;
 import cn.iocoder.yudao.module.tutor.dal.mysql.teacher.TutorTeacherProfileMapper;
 import cn.iocoder.yudao.module.tutor.enums.audit.TutorAuditStatusEnum;
 import cn.iocoder.yudao.module.tutor.enums.profile.TutorUserRoleEnum;
+import cn.iocoder.yudao.module.tutor.enums.point.TutorPointTaskTypeEnum;
 import cn.iocoder.yudao.module.tutor.service.city.TutorCityService;
+import cn.iocoder.yudao.module.tutor.service.point.TutorPointRewardService;
 import cn.iocoder.yudao.module.member.api.user.MemberUserApi;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -34,6 +36,8 @@ class TutorUserProfileServiceImplTest extends BaseMockitoUnitTest {
     private TutorCityService cityService;
     @Mock
     private MemberUserApi memberUserApi;
+    @Mock
+    private TutorPointRewardService pointRewardService;
 
     @Test
     void initProfile_whenTeacher_createsDraftTeacherProfile() {
@@ -57,6 +61,8 @@ class TutorUserProfileServiceImplTest extends BaseMockitoUnitTest {
         assertEquals(TutorAuditStatusEnum.DRAFT.getStatus(), teacherProfile.getCertificationStatus());
         assertEquals(BigDecimal.ZERO, teacherProfile.getRatingAvg());
         assertEquals(0, teacherProfile.getReviewCount());
+        verify(pointRewardService).reward(userId, TutorPointTaskTypeEnum.PROFILE_INIT,
+                "profile_init", "首次初始化身份档案");
     }
 
 }

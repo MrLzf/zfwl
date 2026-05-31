@@ -5,8 +5,11 @@ import cn.iocoder.yudao.module.tutor.dal.dataobject.parent.TutorParentProfileDO;
 import cn.iocoder.yudao.module.tutor.dal.dataobject.profile.TutorUserProfileDO;
 import cn.iocoder.yudao.module.tutor.dal.mysql.parent.TutorParentProfileMapper;
 import cn.iocoder.yudao.module.tutor.enums.profile.TutorUserRoleEnum;
+import cn.iocoder.yudao.module.tutor.enums.point.TutorPointTaskTypeEnum;
+import cn.iocoder.yudao.module.tutor.service.point.TutorPointRewardService;
 import cn.iocoder.yudao.module.tutor.service.profile.TutorUserProfileService;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 
 import javax.annotation.Resource;
@@ -27,6 +30,8 @@ public class TutorParentProfileServiceImpl implements TutorParentProfileService 
     private TutorParentProfileMapper parentProfileMapper;
     @Resource
     private TutorUserProfileService userProfileService;
+    @Resource
+    private TutorPointRewardService pointRewardService;
 
     @Override
     public TutorParentProfileDO getParentProfile(Long userId) {
@@ -34,6 +39,7 @@ public class TutorParentProfileServiceImpl implements TutorParentProfileService 
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public TutorParentProfileDO saveParentProfile(Long userId, AppTutorParentProfileSaveReqVO reqVO) {
         TutorUserProfileDO userProfile = validateParentRole(userId);
         TutorParentProfileDO parentProfile = parentProfileMapper.selectByUserId(userId);
@@ -49,6 +55,7 @@ public class TutorParentProfileServiceImpl implements TutorParentProfileService 
                     .remark(reqVO.getRemark())
                     .build();
             parentProfileMapper.insert(parentProfile);
+            rewardRoleProfileCompletionIfNeeded(userId);
             return parentProfile;
         }
 
@@ -63,7 +70,15 @@ public class TutorParentProfileServiceImpl implements TutorParentProfileService 
                 .remark(reqVO.getRemark())
                 .build();
         parentProfileMapper.updateById(updateObj);
+        rewardRoleProfileCompletionIfNeeded(userId);
         return parentProfileMapper.selectById(parentProfile.getId());
+    }
+
+    private void rewardRoleProfileCompletionIfNeeded(Long userId) {
+        if (!pointRewardService.hasReward(userId, TutorPointTaskTypeEnum.ROLE_PROFILE_COMPLETE)) {
+            pointRewardService.reward(userId, TutorPointTaskTypeEnum.ROLE_PROFILE_COMPLETE,
+                    "role_profile_complete", "首次完善资料");
+        }
     }
 
     private TutorUserProfileDO validateParentRole(Long userId) {

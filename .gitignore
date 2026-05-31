@@ -6,6 +6,8 @@
 !gradle/wrapper/gradle-wrapper.jar
 
 target/
+!yudao-module-tutor/src/main/java/cn/iocoder/yudao/module/tutor/enums/target/
+!yudao-module-tutor/src/main/java/cn/iocoder/yudao/module/tutor/enums/target/TutorTargetTypeEnum.java
 !.mvn/wrapper/maven-wrapper.jar
 
 .flattened-pom.xml

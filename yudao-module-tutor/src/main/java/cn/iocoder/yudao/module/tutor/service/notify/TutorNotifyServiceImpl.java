@@ -30,7 +30,13 @@ public class TutorNotifyServiceImpl implements TutorNotifyService {
 
     @Override
     public void sendCertificationAuditResult(Long userId, Integer status, String rejectReason) {
-        Map<String, Object> params = new HashMap<>();
+        sendCertificationAuditResult(userId, status, rejectReason, "", "", null);
+    }
+
+    @Override
+    public void sendCertificationAuditResult(Long userId, Integer status, String rejectReason,
+                                             String bizId, String targetType, Long targetId) {
+        Map<String, Object> params = buildCommonParams("audit", "certification_detail", bizId, targetType, targetId);
         params.put("status", getAuditStatusName(status));
         params.put("reason", rejectReason == null ? "" : rejectReason);
         send(userId, TEMPLATE_CERTIFICATION_AUDIT, params);
@@ -38,7 +44,13 @@ public class TutorNotifyServiceImpl implements TutorNotifyService {
 
     @Override
     public void sendPublishAuditResult(Long userId, String publishType, String title, Integer auditStatus, String rejectReason) {
-        Map<String, Object> params = new HashMap<>();
+        sendPublishAuditResult(userId, publishType, title, auditStatus, rejectReason, "", "", null);
+    }
+
+    @Override
+    public void sendPublishAuditResult(Long userId, String publishType, String title, Integer auditStatus, String rejectReason,
+                                       String bizId, String targetType, Long targetId) {
+        Map<String, Object> params = buildCommonParams("audit", "my_posts", bizId, targetType, targetId);
         params.put("publishType", publishType);
         params.put("title", title);
         params.put("status", getAuditStatusName(auditStatus));
@@ -69,24 +81,40 @@ public class TutorNotifyServiceImpl implements TutorNotifyService {
 
     @Override
     public void sendContactViewer(Long viewerUserId, Long ownerUserId, String targetType, Long targetId) {
-        String bizId = targetType + ":" + targetId;
-        Map<String, Object> viewerParams = buildCommonParams("contact", "view", bizId, targetType, targetId);
-        viewerParams.put("counterpartUserId", ownerUserId);
-        send(viewerUserId, TEMPLATE_CONTACT_VIEWER, viewerParams);
+        sendContactViewer(viewerUserId, ownerUserId, "", "", false, targetType, targetId);
     }
 
     @Override
     public void sendContactOwner(Long ownerUserId, Long viewerUserId, String targetType, Long targetId) {
-        String bizId = targetType + ":" + targetId;
-        Map<String, Object> ownerParams = buildCommonParams("contact", "viewed", bizId, targetType, targetId);
-        ownerParams.put("counterpartUserId", viewerUserId);
-        send(ownerUserId, TEMPLATE_CONTACT_OWNER, ownerParams);
+        sendContactOwner(ownerUserId, viewerUserId, "", "", false, targetType, targetId);
     }
 
     @Override
     public void sendContactViewed(Long viewerUserId, Long ownerUserId, String targetType, Long targetId) {
-        sendContactViewer(viewerUserId, ownerUserId, targetType, targetId);
-        sendContactOwner(ownerUserId, viewerUserId, targetType, targetId);
+        sendContactViewed(viewerUserId, ownerUserId, "", "", false, targetType, targetId);
+    }
+
+    @Override
+    public void sendContactViewed(Long viewerUserId, Long ownerUserId, String counterpartName, String contentTitle,
+                                  Boolean reuse, String targetType, Long targetId) {
+        sendContactViewer(viewerUserId, ownerUserId, counterpartName, contentTitle, reuse, targetType, targetId);
+        sendContactOwner(ownerUserId, viewerUserId, counterpartName, contentTitle, reuse, targetType, targetId);
+    }
+
+    @Override
+    public void sendContactViewer(Long viewerUserId, Long ownerUserId, String counterpartName, String contentTitle,
+                                  Boolean reuse, String targetType, Long targetId) {
+        Map<String, Object> params = buildContactParams("view", ownerUserId, counterpartName, contentTitle, reuse,
+                targetType, targetId);
+        send(viewerUserId, TEMPLATE_CONTACT_VIEWER, params);
+    }
+
+    @Override
+    public void sendContactOwner(Long ownerUserId, Long viewerUserId, String counterpartName, String contentTitle,
+                                 Boolean reuse, String targetType, Long targetId) {
+        Map<String, Object> params = buildContactParams("viewed", viewerUserId, counterpartName, contentTitle, reuse,
+                targetType, targetId);
+        send(ownerUserId, TEMPLATE_CONTACT_OWNER, params);
     }
 
     @Override
@@ -125,6 +153,16 @@ public class TutorNotifyServiceImpl implements TutorNotifyService {
         params.put("bizId", bizId);
         params.put("targetType", targetType);
         params.put("targetId", targetId);
+        return params;
+    }
+
+    private Map<String, Object> buildContactParams(String action, Long counterpartUserId, String counterpartName,
+                                                    String contentTitle, Boolean reuse, String targetType, Long targetId) {
+        Map<String, Object> params = buildCommonParams("contact", action, targetType + ":" + targetId, targetType, targetId);
+        params.put("counterpartUserId", counterpartUserId);
+        params.put("counterpartName", counterpartName);
+        params.put("contentTitle", contentTitle);
+        params.put("reuse", reuse);
         return params;
     }
 

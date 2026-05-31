@@ -7,7 +7,13 @@ public interface TutorNotifyService {
 
     void sendCertificationAuditResult(Long userId, Integer status, String rejectReason);
 
+    void sendCertificationAuditResult(Long userId, Integer status, String rejectReason,
+                                      String bizId, String targetType, Long targetId);
+
     void sendPublishAuditResult(Long userId, String publishType, String title, Integer auditStatus, String rejectReason);
+
+    void sendPublishAuditResult(Long userId, String publishType, String title, Integer auditStatus, String rejectReason,
+                                String bizId, String targetType, Long targetId);
 
     void sendPointChanged(Long userId, String scene, Integer point);
 
@@ -16,9 +22,18 @@ public interface TutorNotifyService {
 
     void sendContactViewer(Long viewerUserId, Long ownerUserId, String targetType, Long targetId);
 
+    void sendContactViewer(Long viewerUserId, Long ownerUserId, String counterpartName, String contentTitle,
+                           Boolean reuse, String targetType, Long targetId);
+
     void sendContactOwner(Long ownerUserId, Long viewerUserId, String targetType, Long targetId);
 
+    void sendContactOwner(Long ownerUserId, Long viewerUserId, String counterpartName, String contentTitle,
+                          Boolean reuse, String targetType, Long targetId);
+
     void sendContactViewed(Long viewerUserId, Long ownerUserId, String targetType, Long targetId);
+
+    void sendContactViewed(Long viewerUserId, Long ownerUserId, String counterpartName, String contentTitle,
+                           Boolean reuse, String targetType, Long targetId);
 
     void sendMatchSuccess(Long parentUserId, Long teacherUserId, Long matchId);
 

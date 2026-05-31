@@ -38,6 +38,7 @@ public class TutorDemandDO extends TenantBaseDO {
      * 枚举 {@link TutorTeachModeEnum}
      */
     private Integer teachMode;
+    private String address;
     private Integer budgetMin;
     private Integer budgetMax;
     private String description;

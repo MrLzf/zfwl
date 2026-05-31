@@ -19,6 +19,7 @@ public class AppTutorDemandRespVO {
     private String subjects;
     private Integer teachMode;
     private String teachModeName;
+    private String address;
     private Integer budgetMin;
     private Integer budgetMax;
     private String description;

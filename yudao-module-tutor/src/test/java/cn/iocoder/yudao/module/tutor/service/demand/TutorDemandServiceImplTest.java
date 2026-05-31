@@ -19,6 +19,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static cn.iocoder.yudao.framework.test.core.util.AssertUtils.assertServiceException;
 import static cn.iocoder.yudao.module.tutor.enums.ErrorCodeConstants.PUBLISH_STATUS_NOT_VISIBLE;
 import static org.mockito.ArgumentMatchers.any;
@@ -63,7 +65,9 @@ class TutorDemandServiceImplTest extends BaseMockitoUnitTest {
         assertEquals(reqVO.getBudgetMax(), parentReqVO.getBudgetMax());
         assertEquals(reqVO.getTeachMode(), parentReqVO.getTeachMode());
         assertEquals(reqVO.getDescription(), parentReqVO.getRemark());
-        verify(demandMapper).insert(any(TutorDemandDO.class));
+        ArgumentCaptor<TutorDemandDO> demandCaptor = ArgumentCaptor.forClass(TutorDemandDO.class);
+        verify(demandMapper).insert(demandCaptor.capture());
+        assertEquals(reqVO.getAddress(), demandCaptor.getValue().getAddress());
     }
 
     @Test
@@ -96,6 +100,21 @@ class TutorDemandServiceImplTest extends BaseMockitoUnitTest {
                 PUBLISH_STATUS_NOT_VISIBLE);
     }
 
+    @Test
+    void addressValidation_requiresAddressForHomeCapableModes() {
+        AppTutorDemandSaveReqVO reqVO = buildDemandReqVO();
+        reqVO.setTeachMode(TutorTeachModeEnum.HOME.getMode());
+        reqVO.setAddress(" ");
+        assertFalse(reqVO.isAddressValid());
+
+        reqVO.setTeachMode(TutorTeachModeEnum.ONLINE.getMode());
+        assertTrue(reqVO.isAddressValid());
+
+        reqVO.setTeachMode(TutorTeachModeEnum.BOTH.getMode());
+        reqVO.setAddress("朝阳区望京街道花家地小区");
+        assertTrue(reqVO.isAddressValid());
+    }
+
     private AppTutorDemandSaveReqVO buildDemandReqVO() {
         AppTutorDemandSaveReqVO reqVO = new AppTutorDemandSaveReqVO();
         reqVO.setTitle("高三物理冲刺辅导");
@@ -105,6 +124,7 @@ class TutorDemandServiceImplTest extends BaseMockitoUnitTest {
         reqVO.setBudgetMin(120);
         reqVO.setBudgetMax(240);
         reqVO.setDescription("希望老师周末下午上课");
+        reqVO.setAddress("朝阳区望京街道花家地小区");
         reqVO.setCityCode("110100");
         reqVO.setDistanceVisible(true);
         reqVO.setContactMobile("13800000000");

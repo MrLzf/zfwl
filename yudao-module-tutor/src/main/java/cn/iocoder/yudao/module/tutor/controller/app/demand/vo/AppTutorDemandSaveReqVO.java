@@ -1,5 +1,6 @@
 package cn.iocoder.yudao.module.tutor.controller.app.demand.vo;
 
+import cn.hutool.core.util.StrUtil;
 import cn.iocoder.yudao.framework.common.validation.InEnum;
 import cn.iocoder.yudao.framework.common.validation.Mobile;
 import cn.iocoder.yudao.module.tutor.enums.publish.TutorTeachModeEnum;
@@ -29,6 +30,10 @@ public class AppTutorDemandSaveReqVO {
     @NotNull(message = "授课模式不能为空")
     @InEnum(TutorTeachModeEnum.class)
     private Integer teachMode;
+
+    @Schema(description = "详细上课地址，上门或均可模式必填", example = "朝阳区望京街道花家地小区")
+    @Size(max = 255, message = "上课地址不能超过 255 个字符")
+    private String address;
 
     @Schema(description = "最低预算", requiredMode = Schema.RequiredMode.REQUIRED, example = "120")
     @NotNull(message = "最低预算不能为空")
@@ -74,6 +79,11 @@ public class AppTutorDemandSaveReqVO {
     @AssertTrue(message = "最高预算不能低于最低预算")
     public boolean isBudgetValid() {
         return budgetMin == null || budgetMax == null || budgetMax >= budgetMin;
+    }
+
+    @AssertTrue(message = "上门或均可模式必须填写上课地址")
+    public boolean isAddressValid() {
+        return TutorTeachModeEnum.ONLINE.getMode().equals(teachMode) || StrUtil.isNotBlank(address);
     }
 
 }

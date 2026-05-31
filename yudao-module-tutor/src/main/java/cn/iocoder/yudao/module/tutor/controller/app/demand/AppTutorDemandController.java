@@ -73,6 +73,7 @@ public class AppTutorDemandController {
                 .subjects(demand.getSubjects())
                 .teachMode(demand.getTeachMode())
                 .teachModeName(getTeachModeName(demand.getTeachMode()))
+                .address(demand.getAddress())
                 .budgetMin(demand.getBudgetMin())
                 .budgetMax(demand.getBudgetMax())
                 .description(demand.getDescription())

@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS `tutor_demand` (
   `grade` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '年级',
   `subjects` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '科目，多个用逗号分隔',
   `teach_mode` tinyint NOT NULL COMMENT '授课模式：1 上门，2 在线，3 均可',
+  `address` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '详细上课地址',
   `budget_min` int NOT NULL DEFAULT 0 COMMENT '最低预算',
   `budget_max` int NOT NULL DEFAULT 0 COMMENT '最高预算',
   `description` varchar(2000) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '详细要求',

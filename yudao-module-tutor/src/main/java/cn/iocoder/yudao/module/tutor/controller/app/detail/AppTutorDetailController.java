@@ -75,7 +75,10 @@ public class AppTutorDetailController {
         AppTutorDemandRespVO demandRespVO = AppTutorDemandController.convert(demand);
         demandRespVO.setDistanceKm(AppTutorSquareController.calculateDistance(longitude, latitude,
                 demand.getLongitude(), demand.getLatitude()));
-        AppTutorContactRespVO contact = contactService.getReusableContact(loginUserId, TutorTargetTypeEnum.DEMAND.getType(), demand.getId());
+        AppTutorContactRespVO contact = contactService.getOwnerContact(loginUserId, TutorTargetTypeEnum.DEMAND.getType(), demand.getId());
+        if (contact == null) {
+            contact = contactService.getReusableContact(loginUserId, TutorTargetTypeEnum.DEMAND.getType(), demand.getId());
+        }
         return AppTutorDetailRespVO.builder()
                 .targetType(TutorTargetTypeEnum.DEMAND.getType())
                 .demand(demandRespVO)
@@ -95,7 +98,10 @@ public class AppTutorDetailController {
         AppTutorTeacherResumeRespVO resumeRespVO = AppTutorTeacherResumeController.convert(resume);
         resumeRespVO.setDistanceKm(AppTutorSquareController.calculateDistance(longitude, latitude,
                 resume.getLongitude(), resume.getLatitude()));
-        AppTutorContactRespVO contact = contactService.getReusableContact(loginUserId, TutorTargetTypeEnum.RESUME.getType(), resume.getId());
+        AppTutorContactRespVO contact = contactService.getOwnerContact(loginUserId, TutorTargetTypeEnum.RESUME.getType(), resume.getId());
+        if (contact == null) {
+            contact = contactService.getReusableContact(loginUserId, TutorTargetTypeEnum.RESUME.getType(), resume.getId());
+        }
         return AppTutorDetailRespVO.builder()
                 .targetType(TutorTargetTypeEnum.RESUME.getType())
                 .resume(resumeRespVO)

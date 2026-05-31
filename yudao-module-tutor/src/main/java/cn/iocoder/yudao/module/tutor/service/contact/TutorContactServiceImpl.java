@@ -110,6 +110,30 @@ public class TutorContactServiceImpl implements TutorContactService {
     }
 
     @Override
+    public AppTutorContactRespVO getOwnerContact(Long viewerUserId, String targetType, Long targetId) {
+        if (viewerUserId == null) {
+            return null;
+        }
+        if (TutorTargetTypeEnum.isDemand(targetType)) {
+            TutorDemandDO demand = demandMapper.selectById(targetId);
+            if (demand == null || !Objects.equals(viewerUserId, demand.getUserId())) {
+                return null;
+            }
+            return buildResp(targetType, targetId, demand.getUserId(), demand.getContactMobileEncrypt(),
+                    demand.getContactWechatEncrypt(), true);
+        }
+        if (TutorTargetTypeEnum.isResume(targetType)) {
+            TutorTeacherResumeDO resume = resumeMapper.selectById(targetId);
+            if (resume == null || !Objects.equals(viewerUserId, resume.getUserId())) {
+                return null;
+            }
+            return buildResp(targetType, targetId, resume.getUserId(), resume.getContactMobileEncrypt(),
+                    resume.getContactWechatEncrypt(), true);
+        }
+        return null;
+    }
+
+    @Override
     public AppTutorContactRespVO getReusableContact(Long viewerUserId, String targetType, Long targetId) {
         if (viewerUserId == null) {
             return null;

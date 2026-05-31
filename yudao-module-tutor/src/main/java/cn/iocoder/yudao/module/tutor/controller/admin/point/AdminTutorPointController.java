@@ -3,6 +3,7 @@ package cn.iocoder.yudao.module.tutor.controller.admin.point;
 import cn.iocoder.yudao.framework.common.pojo.CommonResult;
 import cn.iocoder.yudao.module.member.api.point.MemberPointApi;
 import cn.iocoder.yudao.module.member.api.user.MemberUserApi;
+import cn.iocoder.yudao.module.member.api.user.dto.MemberUserRespDTO;
 import cn.iocoder.yudao.module.member.enums.point.MemberPointBizTypeEnum;
 import cn.iocoder.yudao.module.tutor.controller.admin.point.vo.AdminTutorPointAdjustReqVO;
 import cn.iocoder.yudao.module.tutor.dal.dataobject.point.TutorPointAdjustRecordDO;
@@ -59,7 +60,9 @@ public class AdminTutorPointController {
             memberPointApi.reducePoint(reqVO.getUserId(), -reqVO.getPoint(),
                     MemberPointBizTypeEnum.ADMIN.getType(), bizId);
         }
-        tutorNotifyService.sendPointChanged(reqVO.getUserId(), "后台积分调整", reqVO.getPoint());
+        MemberUserRespDTO user = memberUserApi.getUser(reqVO.getUserId());
+        tutorNotifyService.sendPointChanged(reqVO.getUserId(), "后台积分调整", reqVO.getPoint(),
+                user == null ? null : user.getPoint(), "point", "adjust", bizId, null, null);
         return success(true);
     }
 

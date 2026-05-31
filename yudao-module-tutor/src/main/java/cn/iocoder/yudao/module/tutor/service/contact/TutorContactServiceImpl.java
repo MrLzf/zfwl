@@ -93,6 +93,8 @@ public class TutorContactServiceImpl implements TutorContactService {
                 demandMapper.updateContactViewCountIncr(demand.getId());
             }
             createOrGetMatchForDemand(demand, viewerUserId);
+            tutorNotifyService.sendContactViewed(viewerUserId, demand.getUserId(), getNickname(demand.getUserId()),
+                    demand.getTitle(), reusable != null, reqVO.getTargetType(), reqVO.getTargetId());
             return buildResp(reqVO, demand.getUserId(), demand.getContactMobileEncrypt(), demand.getContactWechatEncrypt(), reusable != null);
         }
         if (TutorTargetTypeEnum.isResume(reqVO.getTargetType())) {
@@ -104,6 +106,8 @@ public class TutorContactServiceImpl implements TutorContactService {
                 resumeMapper.updateContactViewCountIncr(resume.getId());
             }
             createOrGetMatchForResume(resume, viewerUserId);
+            tutorNotifyService.sendContactViewed(viewerUserId, resume.getUserId(), getNickname(resume.getUserId()),
+                    resume.getTitle(), reusable != null, reqVO.getTargetType(), reqVO.getTargetId());
             return buildResp(reqVO, resume.getUserId(), resume.getContactMobileEncrypt(), resume.getContactWechatEncrypt(), reusable != null);
         }
         throw exception(CONTACT_TARGET_NOT_EXISTS);
@@ -178,7 +182,9 @@ public class TutorContactServiceImpl implements TutorContactService {
         }
         memberPointApi.reducePoint(viewerUserId, VIEW_CONTACT_POINT_COST,
                 MemberPointBizTypeEnum.TUTOR_VIEW_CONTACT.getType(), reqVO.getTargetType() + ":" + reqVO.getTargetId());
-        tutorNotifyService.sendPointChanged(viewerUserId, "查看联系方式", -VIEW_CONTACT_POINT_COST);
+        tutorNotifyService.sendPointChanged(viewerUserId, "查看联系方式", -VIEW_CONTACT_POINT_COST,
+                user.getPoint() - VIEW_CONTACT_POINT_COST, "point", "consume",
+                reqVO.getTargetType() + ":" + reqVO.getTargetId(), reqVO.getTargetType(), reqVO.getTargetId());
     }
 
     private void createRecord(Long viewerUserId, Long targetUserId, AppTutorTargetReqVO reqVO) {
@@ -230,6 +236,11 @@ public class TutorContactServiceImpl implements TutorContactService {
         if (Objects.equals(viewerUserId, targetUserId)) {
             throw exception(CONTACT_TARGET_NOT_EXISTS);
         }
+    }
+
+    private String getNickname(Long userId) {
+        MemberUserRespDTO user = memberUserApi.getUser(userId);
+        return user == null || user.getNickname() == null ? "" : user.getNickname();
     }
 
     private String buildContactLockKey(Long viewerUserId, String targetType, Long targetId) {

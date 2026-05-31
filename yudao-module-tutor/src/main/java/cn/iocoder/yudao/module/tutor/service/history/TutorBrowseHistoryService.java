@@ -11,4 +11,8 @@ public interface TutorBrowseHistoryService {
 
     List<TutorBrowseHistoryDO> getMyBrowseHistoryList(Long userId);
 
+    void deleteMyBrowseHistory(Long userId, Long id);
+
+    void clearMyBrowseHistory(Long userId);
+
 }

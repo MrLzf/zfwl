@@ -8,6 +8,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -33,6 +35,20 @@ public class AppTutorBrowseHistoryController {
         return success(browseHistoryService.getMyBrowseHistoryList(getLoginUserId()).stream()
                 .map(AppTutorBrowseHistoryController::convert)
                 .collect(Collectors.toList()));
+    }
+
+    @DeleteMapping("/{id}")
+    @Operation(summary = "删除我的单条浏览历史")
+    public CommonResult<Boolean> deleteMyBrowseHistory(@PathVariable("id") Long id) {
+        browseHistoryService.deleteMyBrowseHistory(getLoginUserId(), id);
+        return success(true);
+    }
+
+    @DeleteMapping("/my")
+    @Operation(summary = "清空我的浏览历史")
+    public CommonResult<Boolean> clearMyBrowseHistory() {
+        browseHistoryService.clearMyBrowseHistory(getLoginUserId());
+        return success(true);
     }
 
     private static AppTutorBrowseHistoryRespVO convert(TutorBrowseHistoryDO history) {

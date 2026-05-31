@@ -17,4 +17,22 @@ public interface TutorBrowseHistoryMapper extends BaseMapperX<TutorBrowseHistory
                 .last("LIMIT 100"));
     }
 
+    default void deleteByUserIdAndTarget(Long userId, String targetType, Long targetId) {
+        delete(new LambdaQueryWrapperX<TutorBrowseHistoryDO>()
+                .eq(TutorBrowseHistoryDO::getUserId, userId)
+                .eq(TutorBrowseHistoryDO::getTargetType, targetType)
+                .eq(TutorBrowseHistoryDO::getTargetId, targetId));
+    }
+
+    default void deleteByUserId(Long userId) {
+        delete(new LambdaQueryWrapperX<TutorBrowseHistoryDO>()
+                .eq(TutorBrowseHistoryDO::getUserId, userId));
+    }
+
+    default void deleteByIdAndUserId(Long id, Long userId) {
+        delete(new LambdaQueryWrapperX<TutorBrowseHistoryDO>()
+                .eq(TutorBrowseHistoryDO::getId, id)
+                .eq(TutorBrowseHistoryDO::getUserId, userId));
+    }
+
 }

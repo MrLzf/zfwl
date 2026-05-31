@@ -21,6 +21,7 @@ public class TutorBrowseHistoryServiceImpl implements TutorBrowseHistoryService 
         if (userId == null) {
             return;
         }
+        browseHistoryMapper.deleteByUserIdAndTarget(userId, targetType, targetId);
         browseHistoryMapper.insert(TutorBrowseHistoryDO.builder()
                 .userId(userId)
                 .targetType(targetType)
@@ -35,6 +36,16 @@ public class TutorBrowseHistoryServiceImpl implements TutorBrowseHistoryService 
     @Override
     public List<TutorBrowseHistoryDO> getMyBrowseHistoryList(Long userId) {
         return browseHistoryMapper.selectListByUserId(userId);
+    }
+
+    @Override
+    public void deleteMyBrowseHistory(Long userId, Long id) {
+        browseHistoryMapper.deleteByIdAndUserId(id, userId);
+    }
+
+    @Override
+    public void clearMyBrowseHistory(Long userId) {
+        browseHistoryMapper.deleteByUserId(userId);
     }
 
 }

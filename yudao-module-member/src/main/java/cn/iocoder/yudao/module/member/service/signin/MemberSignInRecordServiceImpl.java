@@ -27,9 +27,11 @@ import org.springframework.validation.annotation.Validated;
 import javax.annotation.Resource;
 import java.util.List;
 import java.util.Set;
+import java.util.Comparator;
 
 import static cn.iocoder.yudao.framework.common.exception.util.ServiceExceptionUtil.exception;
 import static cn.iocoder.yudao.framework.common.util.collection.CollectionUtils.convertSet;
+import static cn.iocoder.yudao.module.member.enums.ErrorCodeConstants.SIGN_IN_CONFIG_NOT_EXISTS;
 import static cn.iocoder.yudao.module.member.enums.ErrorCodeConstants.SIGN_IN_RECORD_TODAY_EXISTS;
 
 /**
@@ -116,6 +118,7 @@ public class MemberSignInRecordServiceImpl implements MemberSignInRecordService 
 
         // 2.1. 获取所有的签到规则
         List<MemberSignInConfigDO> signInConfigs = signInConfigService.getSignInConfigList(CommonStatusEnum.ENABLE.getStatus());
+        validateSignInConfigs(signInConfigs);
         // 2.2. 组合数据
         MemberSignInRecordDO record = MemberSignInRecordConvert.INSTANCE.convert(userId, lastRecord, signInConfigs);
 
@@ -139,6 +142,18 @@ public class MemberSignInRecordServiceImpl implements MemberSignInRecordService 
         }
         if (DateUtils.isToday(signInRecordDO.getCreateTime())) {
             throw exception(SIGN_IN_RECORD_TODAY_EXISTS);
+        }
+    }
+
+    private void validateSignInConfigs(List<MemberSignInConfigDO> signInConfigs) {
+        if (CollUtil.isEmpty(signInConfigs)) {
+            throw exception(SIGN_IN_CONFIG_NOT_EXISTS);
+        }
+        signInConfigs.sort(Comparator.comparing(MemberSignInConfigDO::getDay));
+        for (int index = 0; index < signInConfigs.size(); index++) {
+            if (ObjUtil.notEqual(signInConfigs.get(index).getDay(), index + 1)) {
+                throw exception(SIGN_IN_CONFIG_NOT_EXISTS);
+            }
         }
     }
 

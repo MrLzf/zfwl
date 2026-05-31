@@ -1,6 +1,7 @@
 package cn.iocoder.yudao.module.system.service.notify;
 
 import cn.iocoder.yudao.framework.common.pojo.PageResult;
+import cn.iocoder.yudao.framework.common.pojo.PageParam;
 import cn.iocoder.yudao.module.system.controller.admin.notify.vo.message.NotifyMessageMyPageReqVO;
 import cn.iocoder.yudao.module.system.controller.admin.notify.vo.message.NotifyMessagePageReqVO;
 import cn.iocoder.yudao.module.system.dal.dataobject.notify.NotifyMessageDO;
@@ -93,5 +94,13 @@ public interface NotifyMessageService {
      * @return 更新到的条数
      */
     int updateAllNotifyMessageRead(Long userId, Integer userType);
+
+    List<NotifyMessageDO> getTutorNotifyMessageList(Long userId, Integer userType);
+
+    PageResult<NotifyMessageDO> getTutorNotifyMessagePage(PageParam pageParam, Long userId, Integer userType, String category);
+
+    int updateTutorNotifyMessageRead(Long id, Long userId, Integer userType);
+
+    int updateAllTutorNotifyMessageRead(Long userId, Integer userType, String category);
 
 }

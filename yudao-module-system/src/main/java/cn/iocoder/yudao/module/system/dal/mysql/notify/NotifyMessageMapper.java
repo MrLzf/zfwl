@@ -1,12 +1,14 @@
 package cn.iocoder.yudao.module.system.dal.mysql.notify;
 
 import cn.iocoder.yudao.framework.common.pojo.PageResult;
+import cn.iocoder.yudao.framework.common.pojo.PageParam;
 import cn.iocoder.yudao.framework.mybatis.core.mapper.BaseMapperX;
 import cn.iocoder.yudao.framework.mybatis.core.query.LambdaQueryWrapperX;
 import cn.iocoder.yudao.framework.mybatis.core.query.QueryWrapperX;
 import cn.iocoder.yudao.module.system.controller.admin.notify.vo.message.NotifyMessageMyPageReqVO;
 import cn.iocoder.yudao.module.system.controller.admin.notify.vo.message.NotifyMessagePageReqVO;
 import cn.iocoder.yudao.module.system.dal.dataobject.notify.NotifyMessageDO;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import org.apache.ibatis.annotations.Mapper;
 
 import java.time.LocalDateTime;
@@ -65,6 +67,47 @@ public interface NotifyMessageMapper extends BaseMapperX<NotifyMessageDO> {
                 .eq(NotifyMessageDO::getReadStatus, false)
                 .eq(NotifyMessageDO::getUserId, userId)
                 .eq(NotifyMessageDO::getUserType, userType));
+    }
+
+    default List<NotifyMessageDO> selectTutorList(Long userId, Integer userType) {
+        return selectList(new LambdaQueryWrapperX<NotifyMessageDO>()
+                .eq(NotifyMessageDO::getUserId, userId)
+                .eq(NotifyMessageDO::getUserType, userType)
+                .likeRight(NotifyMessageDO::getTemplateCode, "tutor_")
+                .orderByDesc(NotifyMessageDO::getCreateTime)
+                .orderByDesc(NotifyMessageDO::getId));
+    }
+
+    default int updateTutorRead(Long id, Long userId, Integer userType) {
+        return update(new NotifyMessageDO().setReadStatus(true).setReadTime(LocalDateTime.now()),
+                new LambdaQueryWrapperX<NotifyMessageDO>()
+                        .eq(NotifyMessageDO::getId, id)
+                        .eq(NotifyMessageDO::getUserId, userId)
+                        .eq(NotifyMessageDO::getUserType, userType)
+                        .likeRight(NotifyMessageDO::getTemplateCode, "tutor_")
+                        .eq(NotifyMessageDO::getReadStatus, false));
+    }
+
+    default PageResult<NotifyMessageDO> selectTutorPage(PageParam pageParam, Long userId, Integer userType, String category) {
+        return selectPage(pageParam, new QueryWrapperX<NotifyMessageDO>()
+                .eq("user_id", userId)
+                .eq("user_type", userType)
+                .likeRight("template_code", "tutor_")
+                .apply("JSON_UNQUOTE(JSON_EXTRACT(template_params, '$.category')) = {0}", category)
+                .orderByDesc("create_time")
+                .orderByDesc("id"));
+    }
+
+    default int updateAllTutorRead(Long userId, Integer userType, String category) {
+        QueryWrapper<NotifyMessageDO> wrapper = new QueryWrapperX<NotifyMessageDO>()
+                .eq("user_id", userId)
+                .eq("user_type", userType)
+                .likeRight("template_code", "tutor_")
+                .eq("read_status", false);
+        if (category != null) {
+            wrapper.apply("JSON_UNQUOTE(JSON_EXTRACT(template_params, '$.category')) = {0}", category);
+        }
+        return update(new NotifyMessageDO().setReadStatus(true).setReadTime(LocalDateTime.now()), wrapper);
     }
 
 }

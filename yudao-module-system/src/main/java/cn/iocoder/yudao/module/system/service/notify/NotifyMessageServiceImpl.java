@@ -1,6 +1,7 @@
 package cn.iocoder.yudao.module.system.service.notify;
 
 import cn.iocoder.yudao.framework.common.pojo.PageResult;
+import cn.iocoder.yudao.framework.common.pojo.PageParam;
 import cn.iocoder.yudao.module.system.controller.admin.notify.vo.message.NotifyMessageMyPageReqVO;
 import cn.iocoder.yudao.module.system.controller.admin.notify.vo.message.NotifyMessagePageReqVO;
 import cn.iocoder.yudao.module.system.dal.dataobject.notify.NotifyMessageDO;
@@ -70,6 +71,26 @@ public class NotifyMessageServiceImpl implements NotifyMessageService {
     @Override
     public int updateAllNotifyMessageRead(Long userId, Integer userType) {
         return notifyMessageMapper.updateListRead(userId, userType);
+    }
+
+    @Override
+    public List<NotifyMessageDO> getTutorNotifyMessageList(Long userId, Integer userType) {
+        return notifyMessageMapper.selectTutorList(userId, userType);
+    }
+
+    @Override
+    public PageResult<NotifyMessageDO> getTutorNotifyMessagePage(PageParam pageParam, Long userId, Integer userType, String category) {
+        return notifyMessageMapper.selectTutorPage(pageParam, userId, userType, category);
+    }
+
+    @Override
+    public int updateTutorNotifyMessageRead(Long id, Long userId, Integer userType) {
+        return notifyMessageMapper.updateTutorRead(id, userId, userType);
+    }
+
+    @Override
+    public int updateAllTutorNotifyMessageRead(Long userId, Integer userType, String category) {
+        return notifyMessageMapper.updateAllTutorRead(userId, userType, category);
     }
 
 }

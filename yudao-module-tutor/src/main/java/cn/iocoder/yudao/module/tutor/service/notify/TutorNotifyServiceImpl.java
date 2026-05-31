@@ -20,6 +20,8 @@ public class TutorNotifyServiceImpl implements TutorNotifyService {
     private static final String TEMPLATE_CERTIFICATION_AUDIT = "tutor_certification_audit";
     private static final String TEMPLATE_PUBLISH_AUDIT = "tutor_publish_audit";
     private static final String TEMPLATE_POINT_CHANGED = "tutor_point_changed";
+    private static final String TEMPLATE_CONTACT_VIEWER = "tutor_contact_viewer";
+    private static final String TEMPLATE_CONTACT_OWNER = "tutor_contact_owner";
     private static final String TEMPLATE_MATCH_SUCCESS = "tutor_match_success";
     private static final String TEMPLATE_REVIEW_CREATED = "tutor_review_created";
 
@@ -46,10 +48,45 @@ public class TutorNotifyServiceImpl implements TutorNotifyService {
 
     @Override
     public void sendPointChanged(Long userId, String scene, Integer point) {
-        Map<String, Object> params = new HashMap<>();
+        Map<String, Object> params = buildCommonParams("", "", "", "", null);
+        params.put("title", scene);
         params.put("scene", scene);
         params.put("point", point);
+        params.put("totalPoint", "");
         send(userId, TEMPLATE_POINT_CHANGED, params);
+    }
+
+    @Override
+    public void sendPointChanged(Long userId, String title, Integer point, Integer totalPoint,
+                                 String category, String action, String bizId, String targetType, Long targetId) {
+        Map<String, Object> params = buildCommonParams(category, action, bizId, targetType, targetId);
+        params.put("title", title);
+        params.put("scene", title);
+        params.put("point", point);
+        params.put("totalPoint", totalPoint);
+        send(userId, TEMPLATE_POINT_CHANGED, params);
+    }
+
+    @Override
+    public void sendContactViewer(Long viewerUserId, Long ownerUserId, String targetType, Long targetId) {
+        String bizId = targetType + ":" + targetId;
+        Map<String, Object> viewerParams = buildCommonParams("contact", "view", bizId, targetType, targetId);
+        viewerParams.put("counterpartUserId", ownerUserId);
+        send(viewerUserId, TEMPLATE_CONTACT_VIEWER, viewerParams);
+    }
+
+    @Override
+    public void sendContactOwner(Long ownerUserId, Long viewerUserId, String targetType, Long targetId) {
+        String bizId = targetType + ":" + targetId;
+        Map<String, Object> ownerParams = buildCommonParams("contact", "viewed", bizId, targetType, targetId);
+        ownerParams.put("counterpartUserId", viewerUserId);
+        send(ownerUserId, TEMPLATE_CONTACT_OWNER, ownerParams);
+    }
+
+    @Override
+    public void sendContactViewed(Long viewerUserId, Long ownerUserId, String targetType, Long targetId) {
+        sendContactViewer(viewerUserId, ownerUserId, targetType, targetId);
+        sendContactOwner(ownerUserId, viewerUserId, targetType, targetId);
     }
 
     @Override
@@ -78,6 +115,17 @@ public class TutorNotifyServiceImpl implements TutorNotifyService {
         } catch (Exception ex) {
             log.warn("[send][userId({}) templateCode({}) params({}) 家教站内信发送失败]", userId, templateCode, params, ex);
         }
+    }
+
+    private Map<String, Object> buildCommonParams(String category, String action, String bizId,
+                                                   String targetType, Long targetId) {
+        Map<String, Object> params = new HashMap<>();
+        params.put("category", category);
+        params.put("action", action);
+        params.put("bizId", bizId);
+        params.put("targetType", targetType);
+        params.put("targetId", targetId);
+        return params;
     }
 
     private String getAuditStatusName(Integer status) {

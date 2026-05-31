@@ -6214,6 +6214,55 @@ SELECT '家教评价通知', 'tutor_review_created', '家教助手',
        'admin', NOW(), 'admin', NOW(), b'0'
 WHERE NOT EXISTS (SELECT 1 FROM `system_notify_template` WHERE `code` = 'tutor_review_created' AND `deleted` = b'0');
 
+UPDATE `system_notify_template`
+SET `content` = '{title}积分变动：{point}，当前积分：{totalPoint}。',
+    `params` = '["title","point","totalPoint","category","action","bizId","targetType","targetId"]',
+    `updater` = 'admin', `update_time` = NOW()
+WHERE `code` = 'tutor_point_changed' AND `deleted` = b'0';
+
+INSERT INTO `system_notify_template` (`name`, `code`, `nickname`, `content`, `type`, `params`, `status`, `remark`,
+                                      `creator`, `create_time`, `updater`, `update_time`, `deleted`)
+SELECT '家教联系方式查看通知', 'tutor_contact_viewer', '家教助手',
+       '您已查看对方联系方式，请注意核验身份并保护个人信息。', 2,
+       '["category","action","bizId","targetType","targetId","counterpartUserId"]', 0, 'Task 1 家教联系站内通知',
+       'admin', NOW(), 'admin', NOW(), b'0'
+WHERE NOT EXISTS (SELECT 1 FROM `system_notify_template` WHERE `code` = 'tutor_contact_viewer' AND `deleted` = b'0');
+
+INSERT INTO `system_notify_template` (`name`, `code`, `nickname`, `content`, `type`, `params`, `status`, `remark`,
+                                      `creator`, `create_time`, `updater`, `update_time`, `deleted`)
+SELECT '家教联系方式被查看通知', 'tutor_contact_owner', '家教助手',
+       '有用户查看了您的联系方式，请留意后续沟通并注意安全。', 2,
+       '["category","action","bizId","targetType","targetId","counterpartUserId"]', 0, 'Task 1 家教联系站内通知',
+       'admin', NOW(), 'admin', NOW(), b'0'
+WHERE NOT EXISTS (SELECT 1 FROM `system_notify_template` WHERE `code` = 'tutor_contact_owner' AND `deleted` = b'0');
+
+UPDATE `system_notify_template`
+SET `content` = '您的教师认证审核结果为：{status}。{reason}', `params` = '["status","reason"]',
+    `updater` = 'admin', `update_time` = NOW()
+WHERE `code` = 'tutor_certification_audit' AND `deleted` = b'0';
+UPDATE `system_notify_template`
+SET `content` = '您的{publishType}《{title}》审核结果为：{status}。{reason}', `params` = '["publishType","title","status","reason"]',
+    `updater` = 'admin', `update_time` = NOW()
+WHERE `code` = 'tutor_publish_audit' AND `deleted` = b'0';
+UPDATE `system_notify_template`
+SET `content` = '您有一条家教匹配已双方确认，匹配编号：{matchId}。', `params` = '["matchId"]',
+    `updater` = 'admin', `update_time` = NOW()
+WHERE `code` = 'tutor_match_success' AND `deleted` = b'0';
+UPDATE `system_notify_template`
+SET `content` = '用户 {reviewerUserId} 给您提交了 {rating} 星评价。', `params` = '["reviewerUserId","rating"]',
+    `updater` = 'admin', `update_time` = NOW()
+WHERE `code` = 'tutor_review_created' AND `deleted` = b'0';
+UPDATE `system_notify_template`
+SET `content` = '您已查看对方联系方式，请注意核验身份并保护个人信息。',
+    `params` = '["category","action","bizId","targetType","targetId","counterpartUserId"]',
+    `updater` = 'admin', `update_time` = NOW()
+WHERE `code` = 'tutor_contact_viewer' AND `deleted` = b'0';
+UPDATE `system_notify_template`
+SET `content` = '有用户查看了您的联系方式，请留意后续沟通并注意安全。',
+    `params` = '["category","action","bizId","targetType","targetId","counterpartUserId"]',
+    `updater` = 'admin', `update_time` = NOW()
+WHERE `code` = 'tutor_contact_owner' AND `deleted` = b'0';
+
 
 -- ============================================================
 -- Source: tutor_parent_profile.sql

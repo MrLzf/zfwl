@@ -11,6 +11,15 @@ public interface TutorNotifyService {
 
     void sendPointChanged(Long userId, String scene, Integer point);
 
+    void sendPointChanged(Long userId, String title, Integer point, Integer totalPoint,
+                          String category, String action, String bizId, String targetType, Long targetId);
+
+    void sendContactViewer(Long viewerUserId, Long ownerUserId, String targetType, Long targetId);
+
+    void sendContactOwner(Long ownerUserId, Long viewerUserId, String targetType, Long targetId);
+
+    void sendContactViewed(Long viewerUserId, Long ownerUserId, String targetType, Long targetId);
+
     void sendMatchSuccess(Long parentUserId, Long teacherUserId, Long matchId);
 
     void sendReviewCreated(Long targetUserId, Long reviewerUserId, Integer rating);

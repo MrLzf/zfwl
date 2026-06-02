@@ -5397,7 +5397,7 @@ DROP TABLE IF EXISTS `member_experience_record`;
 CREATE TABLE `member_experience_record`  (
   `id` bigint NOT NULL AUTO_INCREMENT COMMENT '编号',
   `user_id` bigint NOT NULL COMMENT '用户编号',
-  `biz_type` tinyint NOT NULL COMMENT '业务类型',
+  `biz_type` int NOT NULL COMMENT '业务类型',
   `biz_id` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '业务编号',
   `title` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '标题',
   `description` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '描述',
@@ -5420,7 +5420,7 @@ CREATE TABLE `member_point_record`  (
   `id` bigint NOT NULL AUTO_INCREMENT COMMENT '自增主键',
   `user_id` bigint NOT NULL COMMENT '用户编号',
   `biz_id` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '业务编码',
-  `biz_type` tinyint NOT NULL COMMENT '业务类型',
+  `biz_type` int NOT NULL COMMENT '业务类型',
   `title` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '积分标题',
   `description` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '积分描述',
   `point` int NOT NULL COMMENT '变动积分',
@@ -6785,6 +6785,23 @@ CREATE TABLE `wechat_group`  (
 -- ----------------------------
 INSERT INTO `wechat_group` VALUES (1, 'demo_group_001', '营销10086群', 500, 120, '欢迎加入学习交流群，请先阅读群公告。扫码入群', 'https://wccprint.top:8443/uploads/qrcodes/2026-05-23/0433bf15-8bf1-4e54-9325-7da675f5bdce.png', 0, '2026-05-22 19:06:20', '2026-05-22 19:06:20', 0);
 INSERT INTO `wechat_group` VALUES (2, 'demo_group_002', '营销二群', 500, 0, '欢迎加入备用交流群，请先阅读群公告。', 'https://wccprint.top:8443/uploads/qrcodes/2026-05-23/47355231-48c9-46f4-a31a-5e5bc2185386.png', 1, '2026-05-22 19:06:20', '2026-05-22 19:06:20', 0);
+
+
+
+
+-- ============================================================
+-- Menu: recharge records
+-- ============================================================
+
+INSERT INTO `system_menu` (`id`, `name`, `permission`, `type`, `sort`, `parent_id`, `path`, `icon`, `component`, `component_name`, `status`, `visible`, `keep_alive`, `always_show`, `creator`, `create_time`, `updater`, `update_time`, `deleted`) VALUES (5986, '充值记录', '', 2, 3, 2551, 'wallet-recharge', 'ep:list', 'pay/wallet/recharge/index', 'WalletRecharge', 0, b'1', b'1', b'1', '', '2026-06-02 12:00:00', '', '2026-06-02 12:00:00', b'0');
+INSERT INTO `system_menu` (`id`, `name`, `permission`, `type`, `sort`, `parent_id`, `path`, `icon`, `component`, `component_name`, `status`, `visible`, `keep_alive`, `always_show`, `creator`, `create_time`, `updater`, `update_time`, `deleted`) VALUES (5987, '充值记录查询', 'pay:wallet-recharge:query', 3, 1, 5986, '', '', '', NULL, 0, b'1', b'1', b'1', '', '2026-06-02 12:00:00', '', '2026-06-02 12:00:00', b'0');
+
+-- ============================================================
+-- Migration: widen biz_type to support tutor point types > 127
+-- ============================================================
+
+ALTER TABLE `member_experience_record` MODIFY COLUMN `biz_type` int NOT NULL COMMENT '业务类型';
+ALTER TABLE `member_point_record` MODIFY COLUMN `biz_type` int NOT NULL COMMENT '业务类型';
 
 SET FOREIGN_KEY_CHECKS = 1;
 

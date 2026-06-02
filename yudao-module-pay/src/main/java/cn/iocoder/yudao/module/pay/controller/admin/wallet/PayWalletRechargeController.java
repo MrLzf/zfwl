@@ -1,6 +1,11 @@
 package cn.iocoder.yudao.module.pay.controller.admin.wallet;
 
 import cn.iocoder.yudao.framework.common.pojo.CommonResult;
+import cn.iocoder.yudao.framework.common.pojo.PageResult;
+import cn.iocoder.yudao.module.pay.controller.admin.wallet.vo.recharge.WalletRechargePageReqVO;
+import cn.iocoder.yudao.module.pay.controller.admin.wallet.vo.recharge.WalletRechargeRespVO;
+import cn.iocoder.yudao.module.pay.convert.wallet.PayWalletRechargeConvert;
+import cn.iocoder.yudao.module.pay.dal.dataobject.wallet.PayWalletRechargeDO;
 import cn.iocoder.yudao.module.pay.api.notify.dto.PayOrderNotifyReqDTO;
 import cn.iocoder.yudao.module.pay.api.notify.dto.PayRefundNotifyReqDTO;
 import cn.iocoder.yudao.module.pay.service.wallet.PayWalletRechargeService;
@@ -8,6 +13,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -28,9 +34,17 @@ public class PayWalletRechargeController {
     @Resource
     private PayWalletRechargeService walletRechargeService;
 
+    @GetMapping("/page")
+    @Operation(summary = "获得钱包充值分页")
+    @PreAuthorize("@ss.hasPermission('pay:wallet-recharge:query')")
+    public CommonResult<PageResult<WalletRechargeRespVO>> getRechargePage(@Valid WalletRechargePageReqVO pageReqVO) {
+        PageResult<PayWalletRechargeDO> pageResult = walletRechargeService.getRechargePage(pageReqVO);
+        return success(PayWalletRechargeConvert.INSTANCE.convertPage02(pageResult));
+    }
+
     @PostMapping("/update-paid")
-    @Operation(summary = "更新钱包充值为已充值") // 由 pay-module 支付服务，进行回调，可见 PayNotifyJob
-    @PermitAll // 无需登录， 内部校验实现
+    @Operation(summary = "更新钱包充值为已充值")
+    @PermitAll
     public CommonResult<Boolean> updateWalletRechargerPaid(@Valid @RequestBody PayOrderNotifyReqDTO notifyReqDTO) {
         walletRechargeService.updateWalletRechargerPaid(Long.valueOf(notifyReqDTO.getMerchantOrderId()),
                 notifyReqDTO.getPayOrderId());
@@ -46,8 +60,8 @@ public class PayWalletRechargeController {
     }
 
     @PostMapping("/update-refunded")
-    @Operation(summary = "更新钱包充值为已退款") // 由 pay-module 支付服务，进行回调，可见 PayNotifyJob
-    @PermitAll // 无需登录， 内部校验实现
+    @Operation(summary = "更新钱包充值为已退款")
+    @PermitAll
     public CommonResult<Boolean> updateWalletRechargeRefunded(@RequestBody PayRefundNotifyReqDTO notifyReqDTO) {
         walletRechargeService.updateWalletRechargeRefunded(
                 Long.valueOf(notifyReqDTO.getMerchantOrderId()),

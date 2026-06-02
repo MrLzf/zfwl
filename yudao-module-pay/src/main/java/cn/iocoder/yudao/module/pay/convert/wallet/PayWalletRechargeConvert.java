@@ -6,6 +6,7 @@ import cn.iocoder.yudao.framework.common.util.collection.MapUtils;
 import cn.iocoder.yudao.framework.common.util.object.BeanUtils;
 import cn.iocoder.yudao.framework.dict.core.DictFrameworkUtils;
 import cn.iocoder.yudao.module.pay.controller.app.wallet.vo.recharge.AppPayWalletRechargeCreateRespVO;
+import cn.iocoder.yudao.module.pay.controller.admin.wallet.vo.recharge.WalletRechargeRespVO;
 import cn.iocoder.yudao.module.pay.controller.app.wallet.vo.recharge.AppPayWalletRechargeRespVO;
 import cn.iocoder.yudao.module.pay.dal.dataobject.order.PayOrderDO;
 import cn.iocoder.yudao.module.pay.dal.dataobject.wallet.PayWalletRechargeDO;
@@ -40,4 +41,10 @@ public interface PayWalletRechargeConvert {
         return voPageResult;
     }
 
+
+    default PageResult<WalletRechargeRespVO> convertPage02(PageResult<PayWalletRechargeDO> pageResult) {
+        return BeanUtils.toBean(pageResult, WalletRechargeRespVO.class);
+    }
+
+    WalletRechargeRespVO convert02(PayWalletRechargeDO bean);
 }

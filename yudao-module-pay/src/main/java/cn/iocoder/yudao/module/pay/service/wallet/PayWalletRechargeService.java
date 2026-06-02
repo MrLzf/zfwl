@@ -3,6 +3,7 @@ package cn.iocoder.yudao.module.pay.service.wallet;
 import cn.iocoder.yudao.framework.common.pojo.PageParam;
 import cn.iocoder.yudao.framework.common.pojo.PageResult;
 import cn.iocoder.yudao.module.pay.controller.app.wallet.vo.recharge.AppPayWalletRechargeCreateReqVO;
+import cn.iocoder.yudao.module.pay.controller.admin.wallet.vo.recharge.WalletRechargePageReqVO;
 import cn.iocoder.yudao.module.pay.dal.dataobject.wallet.PayWalletRechargeDO;
 
 /**
@@ -61,4 +62,12 @@ public interface PayWalletRechargeService {
      */
     void updateWalletRechargeRefunded(Long id, String refundId, Long payRefundId);
 
+
+    /**
+     * \u83b7\u5f97\u94b1\u5305\u5145\u503c\u8bb0\u5f55\u5206\u9875\uff08\u7ba1\u7406\u540e\u53f0\uff09
+     *
+     * @param pageReqVO \u5206\u9875\u8bf7\u6c42
+     * @return \u94b1\u5305\u5145\u503c\u8bb0\u5f55\u5206\u9875
+     */
+    PageResult<PayWalletRechargeDO> getRechargePage(WalletRechargePageReqVO pageReqVO);
 }

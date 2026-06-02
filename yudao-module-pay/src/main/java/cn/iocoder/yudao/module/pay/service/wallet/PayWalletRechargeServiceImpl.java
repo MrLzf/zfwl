@@ -12,6 +12,7 @@ import cn.iocoder.yudao.module.pay.api.order.dto.PayOrderCreateReqDTO;
 import cn.iocoder.yudao.module.pay.api.refund.PayRefundApi;
 import cn.iocoder.yudao.module.pay.api.refund.dto.PayRefundCreateReqDTO;
 import cn.iocoder.yudao.module.pay.api.refund.dto.PayRefundRespDTO;
+import cn.iocoder.yudao.module.pay.controller.admin.wallet.vo.recharge.WalletRechargePageReqVO;
 import cn.iocoder.yudao.module.pay.controller.app.wallet.vo.recharge.AppPayWalletRechargeCreateReqVO;
 import cn.iocoder.yudao.module.pay.dal.dataobject.order.PayOrderDO;
 import cn.iocoder.yudao.module.pay.dal.dataobject.wallet.PayWalletDO;
@@ -347,4 +348,9 @@ public class PayWalletRechargeServiceImpl implements PayWalletRechargeService {
         return SpringUtil.getBean(getClass());
     }
 
+
+    @Override
+    public PageResult<PayWalletRechargeDO> getRechargePage(WalletRechargePageReqVO pageReqVO) {
+        return walletRechargeMapper.selectPage(pageReqVO);
+    }
 }

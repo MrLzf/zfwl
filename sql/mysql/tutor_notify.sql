@@ -67,11 +67,11 @@ SET `content` = '您的{publishType}《{title}》审核结果为：{status}。{r
     `updater` = 'admin', `update_time` = NOW()
 WHERE `code` = 'tutor_publish_audit' AND `deleted` = b'0';
 UPDATE `system_notify_template`
-SET `content` = '您有一条家教匹配已双方确认，匹配编号：{matchId}。', `params` = '["matchId"]',
+SET `content` = '您有一条家教匹配已双方确认，匹配编号：{matchId}。', `params` = '["matchId","category","action","bizId","targetType","targetId"]',
     `updater` = 'admin', `update_time` = NOW()
 WHERE `code` = 'tutor_match_success' AND `deleted` = b'0';
 UPDATE `system_notify_template`
-SET `content` = '用户 {reviewerUserId} 给您提交了 {rating} 星评价。', `params` = '["reviewerUserId","rating"]',
+SET `content` = '用户 {reviewerUserId} 给您提交了 {rating} 星评价。', `params` = '["reviewerUserId","rating","category","action","bizId","targetType","targetId"]',
     `updater` = 'admin', `update_time` = NOW()
 WHERE `code` = 'tutor_review_created' AND `deleted` = b'0';
 UPDATE `system_notify_template`

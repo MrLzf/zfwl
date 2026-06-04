@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
 @Service
 public class TutorMessageServiceImpl implements TutorMessageService {
 
-    private static final List<String> CATEGORIES = Arrays.asList("audit", "contact", "point");
+    private static final List<String> CATEGORIES = Arrays.asList("audit", "contact", "match", "review", "point");
 
     @Resource
     private NotifyMessageService notifyMessageService;

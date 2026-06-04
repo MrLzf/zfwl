@@ -50,7 +50,7 @@ public class AppTutorMessageController {
     @Operation(summary = "标记家教消息为全部已读")
     public CommonResult<Boolean> readAll(
             @RequestParam(value = "category", required = false)
-            @Pattern(regexp = "audit|contact|point", message = "消息分类不正确") String category) {
+            @Pattern(regexp = "audit|contact|match|review|point", message = "消息分类不正确") String category) {
         tutorMessageService.readAll(getLoginUserId(), category);
         return success(Boolean.TRUE);
     }

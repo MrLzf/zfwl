@@ -42,6 +42,7 @@ class TutorReviewServiceImplTest extends BaseMockitoUnitTest {
 
         reviewService.createReview(100L, reqVO);
 
+        verify(tutorNotifyService).sendReviewCreated(200L, 100L, 5);
         verify(pointRewardService).reward(100L, TutorPointTaskTypeEnum.FIVE_STAR_REVIEW,
                 "10:reviewer", "五星评价奖励");
         verify(pointRewardService).reward(200L, TutorPointTaskTypeEnum.FIVE_STAR_REVIEW,
@@ -60,6 +61,7 @@ class TutorReviewServiceImplTest extends BaseMockitoUnitTest {
 
         reviewService.createReview(100L, reqVO);
 
+        verify(tutorNotifyService).sendReviewCreated(200L, 100L, 4);
         verifyNoInteractions(pointRewardService);
     }
 

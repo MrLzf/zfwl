@@ -126,7 +126,8 @@ public class TutorNotifyServiceImpl implements TutorNotifyService {
 
     @Override
     public void sendMatchSuccess(Long parentUserId, Long teacherUserId, Long matchId) {
-        Map<String, Object> params = new HashMap<>();
+        Map<String, Object> params = buildCommonParams("match", "match_reviews", "match:" + matchId, "match", matchId);
+        params.put("title", "匹配成功");
         params.put("matchId", matchId);
         send(parentUserId, TEMPLATE_MATCH_SUCCESS, params);
         send(teacherUserId, TEMPLATE_MATCH_SUCCESS, params);
@@ -134,7 +135,8 @@ public class TutorNotifyServiceImpl implements TutorNotifyService {
 
     @Override
     public void sendReviewCreated(Long targetUserId, Long reviewerUserId, Integer rating) {
-        Map<String, Object> params = new HashMap<>();
+        Map<String, Object> params = buildCommonParams("review", "match_reviews", "review:" + rating, "match", null);
+        params.put("title", "收到评价");
         params.put("reviewerUserId", reviewerUserId);
         params.put("rating", rating);
         send(targetUserId, TEMPLATE_REVIEW_CREATED, params);

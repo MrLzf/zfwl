@@ -19,13 +19,18 @@ import cn.iocoder.yudao.module.member.enums.point.MemberPointBizTypeEnum;
 import cn.iocoder.yudao.module.member.service.level.MemberLevelService;
 import cn.iocoder.yudao.module.member.service.point.MemberPointRecordService;
 import cn.iocoder.yudao.module.member.service.user.MemberUserService;
+import cn.iocoder.yudao.module.system.api.notify.NotifyMessageSendApi;
+import cn.iocoder.yudao.module.system.api.notify.dto.NotifySendSingleToUserReqDTO;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 
 import javax.annotation.Resource;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.Comparator;
 
@@ -41,7 +46,10 @@ import static cn.iocoder.yudao.module.member.enums.ErrorCodeConstants.SIGN_IN_RE
  */
 @Service
 @Validated
+@Slf4j
 public class MemberSignInRecordServiceImpl implements MemberSignInRecordService {
+
+    private static final String TUTOR_POINT_CHANGED_TEMPLATE = "tutor_point_changed";
 
     @Resource
     private MemberSignInRecordMapper signInRecordMapper;
@@ -54,6 +62,8 @@ public class MemberSignInRecordServiceImpl implements MemberSignInRecordService 
 
     @Resource
     private MemberUserService memberUserService;
+    @Resource
+    private NotifyMessageSendApi notifyMessageSendApi;
 
     @Override
     public AppMemberSignInRecordSummaryRespVO getSignInRecordSummary(Long userId) {
@@ -128,12 +138,36 @@ public class MemberSignInRecordServiceImpl implements MemberSignInRecordService 
         // 4. 增加积分
         if (!ObjectUtils.equalsAny(record.getPoint(), null, 0)) {
             pointRecordService.createPointRecord(userId, record.getPoint(), MemberPointBizTypeEnum.SIGN, String.valueOf(record.getId()));
+            sendSignInPointNotification(userId, record);
         }
         // 5. 增加经验
         if (!ObjectUtils.equalsAny(record.getExperience(), null, 0)) {
             memberLevelService.addExperience(userId, record.getExperience(), MemberExperienceBizTypeEnum.SIGN_IN, String.valueOf(record.getId()));
         }
         return record;
+    }
+
+    private void sendSignInPointNotification(Long userId, MemberSignInRecordDO record) {
+        Map<String, Object> params = new HashMap<>();
+        params.put("title", "每日签到");
+        params.put("scene", "每日签到");
+        params.put("point", record.getPoint());
+        params.put("totalPoint", "");
+        params.put("category", "point");
+        params.put("action", "point_records");
+        params.put("bizId", "sign:" + record.getId());
+        params.put("targetType", "sign_in");
+        params.put("targetId", record.getId());
+        try {
+            NotifySendSingleToUserReqDTO reqDTO = new NotifySendSingleToUserReqDTO();
+            reqDTO.setUserId(userId);
+            reqDTO.setTemplateCode(TUTOR_POINT_CHANGED_TEMPLATE);
+            reqDTO.setTemplateParams(params);
+            notifyMessageSendApi.sendSingleMessageToMember(reqDTO);
+        } catch (Exception ex) {
+            log.warn("[sendSignInPointNotification][userId({}) recordId({}) 签到积分站内信发送失败]",
+                    userId, record.getId(), ex);
+        }
     }
 
     private void validateSigned(MemberSignInRecordDO signInRecordDO) {

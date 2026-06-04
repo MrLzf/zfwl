@@ -42,7 +42,7 @@ public interface TutorDemandMapper extends BaseMapperX<TutorDemandDO> {
                 .eqIfPresent(TutorDemandDO::getStatus, reqVO.getStatus())
                 .eqIfPresent(TutorDemandDO::getAuditStatus, reqVO.getAuditStatus())
                 .betweenIfPresent(TutorDemandDO::getCreateTime, reqVO.getCreateTime())
-                .orderByDesc(TutorDemandDO::getId));
+                .last("ORDER BY EXISTS (SELECT 1 FROM tutor_vip_record v WHERE v.user_id = tutor_demand.user_id AND v.status = 0 AND v.start_time <= NOW() AND v.end_time > NOW() AND v.deleted = b'0') DESC, id DESC"));
     }
 
     default PageResult<TutorDemandDO> selectSquarePage(AppTutorDemandPageReqVO reqVO) {

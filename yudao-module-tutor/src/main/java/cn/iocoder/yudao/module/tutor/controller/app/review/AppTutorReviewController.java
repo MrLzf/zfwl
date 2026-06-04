@@ -14,6 +14,7 @@ import javax.annotation.Resource;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import static cn.iocoder.yudao.framework.common.pojo.CommonResult.success;
@@ -46,6 +47,12 @@ public class AppTutorReviewController {
     public CommonResult<List<AppTutorReviewRespVO>> getTargetReviewList(@RequestParam("targetUserId") @NotNull Long targetUserId) {
         return success(reviewService.getTargetReviewList(targetUserId).stream()
                 .map(AppTutorReviewController::convert).collect(Collectors.toList()));
+    }
+
+    @GetMapping("/target/tags")
+    @Operation(summary = "获得目标用户评价标签统计")
+    public CommonResult<Map<String, Long>> getTargetReviewTagStats(@RequestParam("targetUserId") @NotNull Long targetUserId) {
+        return success(reviewService.getTargetReviewTagStats(targetUserId));
     }
 
     public static AppTutorReviewRespVO convert(TutorReviewDO review) {

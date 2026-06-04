@@ -21,6 +21,7 @@ import cn.iocoder.yudao.module.tutor.enums.target.TutorTargetTypeEnum;
 import cn.iocoder.yudao.module.tutor.service.demand.TutorDemandService;
 import cn.iocoder.yudao.module.tutor.service.notify.TutorNotifyService;
 import cn.iocoder.yudao.module.tutor.service.resume.TutorTeacherResumeService;
+import cn.iocoder.yudao.module.tutor.service.vip.TutorVipService;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.stereotype.Service;
@@ -64,6 +65,8 @@ public class TutorContactServiceImpl implements TutorContactService {
     @Resource
     private TutorNotifyService tutorNotifyService;
     @Resource
+    private TutorVipService vipService;
+    @Resource
     private RedissonClient redissonClient;
     @Resource
     private TransactionTemplate transactionTemplate;
@@ -87,28 +90,30 @@ public class TutorContactServiceImpl implements TutorContactService {
         if (TutorTargetTypeEnum.isDemand(reqVO.getTargetType())) {
             TutorDemandDO demand = demandService.getSquareDemand(reqVO.getTargetId());
             validateNotSelf(viewerUserId, demand.getUserId());
+            int pointCost = 0;
             if (reusable == null) {
-                deductPoint(viewerUserId, reqVO);
-                createRecord(viewerUserId, demand.getUserId(), reqVO);
+                pointCost = deductPoint(viewerUserId, reqVO);
+                createRecord(viewerUserId, demand.getUserId(), reqVO, pointCost);
                 demandMapper.updateContactViewCountIncr(demand.getId());
             }
             createOrGetMatchForDemand(demand, viewerUserId);
             tutorNotifyService.sendContactViewed(viewerUserId, demand.getUserId(), getNickname(viewerUserId),
                     getNickname(demand.getUserId()), demand.getTitle(), reusable != null, reqVO.getTargetType(), reqVO.getTargetId());
-            return buildResp(reqVO, demand.getUserId(), demand.getContactMobileEncrypt(), demand.getContactWechatEncrypt(), reusable != null);
+            return buildResp(reqVO, demand.getUserId(), demand.getContactMobileEncrypt(), demand.getContactWechatEncrypt(), reusable, pointCost);
         }
         if (TutorTargetTypeEnum.isResume(reqVO.getTargetType())) {
             TutorTeacherResumeDO resume = resumeService.getSquareResume(reqVO.getTargetId());
             validateNotSelf(viewerUserId, resume.getUserId());
+            int pointCost = 0;
             if (reusable == null) {
-                deductPoint(viewerUserId, reqVO);
-                createRecord(viewerUserId, resume.getUserId(), reqVO);
+                pointCost = deductPoint(viewerUserId, reqVO);
+                createRecord(viewerUserId, resume.getUserId(), reqVO, pointCost);
                 resumeMapper.updateContactViewCountIncr(resume.getId());
             }
             createOrGetMatchForResume(resume, viewerUserId);
             tutorNotifyService.sendContactViewed(viewerUserId, resume.getUserId(), getNickname(viewerUserId),
                     getNickname(resume.getUserId()), resume.getTitle(), reusable != null, reqVO.getTargetType(), reqVO.getTargetId());
-            return buildResp(reqVO, resume.getUserId(), resume.getContactMobileEncrypt(), resume.getContactWechatEncrypt(), reusable != null);
+            return buildResp(reqVO, resume.getUserId(), resume.getContactMobileEncrypt(), resume.getContactWechatEncrypt(), reusable, pointCost);
         }
         throw exception(CONTACT_TARGET_NOT_EXISTS);
     }
@@ -175,25 +180,27 @@ public class TutorContactServiceImpl implements TutorContactService {
         return contactViewRecordMapper.selectPage(reqVO);
     }
 
-    private void deductPoint(Long viewerUserId, AppTutorTargetReqVO reqVO) {
+    private int deductPoint(Long viewerUserId, AppTutorTargetReqVO reqVO) {
+        int pointCost = calculatePointCost(viewerUserId);
         MemberUserRespDTO user = memberUserApi.getUser(viewerUserId);
-        if (user == null || user.getPoint() == null || user.getPoint() < VIEW_CONTACT_POINT_COST) {
+        if (user == null || user.getPoint() == null || user.getPoint() < pointCost) {
             throw exception(CONTACT_POINT_NOT_ENOUGH);
         }
-        memberPointApi.reducePoint(viewerUserId, VIEW_CONTACT_POINT_COST,
+        memberPointApi.reducePoint(viewerUserId, pointCost,
                 MemberPointBizTypeEnum.TUTOR_VIEW_CONTACT.getType(), reqVO.getTargetType() + ":" + reqVO.getTargetId());
-        tutorNotifyService.sendPointChanged(viewerUserId, "查看联系方式", -VIEW_CONTACT_POINT_COST,
-                user.getPoint() - VIEW_CONTACT_POINT_COST, "point", "point_records",
+        tutorNotifyService.sendPointChanged(viewerUserId, "查看联系方式", -pointCost,
+                user.getPoint() - pointCost, "point", "point_records",
                 reqVO.getTargetType() + ":" + reqVO.getTargetId(), reqVO.getTargetType(), reqVO.getTargetId());
+        return pointCost;
     }
 
-    private void createRecord(Long viewerUserId, Long targetUserId, AppTutorTargetReqVO reqVO) {
+    private void createRecord(Long viewerUserId, Long targetUserId, AppTutorTargetReqVO reqVO, int pointCost) {
         contactViewRecordMapper.insert(TutorContactViewRecordDO.builder()
                 .viewerUserId(viewerUserId)
                 .targetType(reqVO.getTargetType())
                 .targetId(reqVO.getTargetId())
                 .targetUserId(targetUserId)
-                .pointCost(VIEW_CONTACT_POINT_COST)
+                .pointCost(pointCost)
                 .freeReuseUntil(LocalDateTime.now().plusDays(30))
                 .viewedMobile(true)
                 .viewedWechat(true)
@@ -221,15 +228,45 @@ public class TutorContactServiceImpl implements TutorContactService {
     }
 
     private AppTutorContactRespVO buildResp(AppTutorTargetReqVO reqVO, Long targetUserId, String mobile, String wechat, boolean reused) {
-        return buildResp(reqVO.getTargetType(), reqVO.getTargetId(), targetUserId, mobile, wechat, reused);
+        return buildResp(reqVO.getTargetType(), reqVO.getTargetId(), targetUserId, mobile, wechat, null, reused);
     }
 
     private AppTutorContactRespVO buildResp(String targetType, Long targetId, Long targetUserId, String mobile, String wechat,
                                             boolean reused) {
+        return buildResp(targetType, targetId, targetUserId, mobile, wechat, null, reused);
+    }
+
+    private AppTutorContactRespVO buildResp(AppTutorTargetReqVO reqVO, Long targetUserId, String mobile, String wechat,
+                                            TutorContactViewRecordDO reusable) {
+        return buildResp(reqVO.getTargetType(), reqVO.getTargetId(), targetUserId, mobile, wechat, reusable, reusable != null);
+    }
+
+    private AppTutorContactRespVO buildResp(AppTutorTargetReqVO reqVO, Long targetUserId, String mobile, String wechat,
+                                            TutorContactViewRecordDO reusable, int pointCost) {
+        return buildResp(reqVO.getTargetType(), reqVO.getTargetId(), targetUserId, mobile, wechat, reusable,
+                reusable != null, pointCost);
+    }
+
+    private AppTutorContactRespVO buildResp(String targetType, Long targetId, Long targetUserId, String mobile, String wechat,
+                                            TutorContactViewRecordDO reusable, boolean reused) {
+        return buildResp(targetType, targetId, targetUserId, mobile, wechat, reusable, reused,
+                reused ? 0 : VIEW_CONTACT_POINT_COST);
+    }
+
+    private AppTutorContactRespVO buildResp(String targetType, Long targetId, Long targetUserId, String mobile, String wechat,
+                                            TutorContactViewRecordDO reusable, boolean reused, int pointCost) {
+        if (reusable != null && reusable.getPointCost() != null) {
+            pointCost = 0;
+        }
         return AppTutorContactRespVO.builder()
                 .targetType(targetType).targetId(targetId).targetUserId(targetUserId)
-                .mobile(mobile).wechat(wechat).pointCost(reused ? 0 : VIEW_CONTACT_POINT_COST)
+                .mobile(mobile).wechat(wechat).pointCost(pointCost)
                 .reused(reused).safetyTip(SAFETY_TIP).build();
+    }
+
+    private int calculatePointCost(Long viewerUserId) {
+        return vipService == null ? VIEW_CONTACT_POINT_COST
+                : vipService.calculateContactPointCost(viewerUserId, VIEW_CONTACT_POINT_COST);
     }
 
     private void validateNotSelf(Long viewerUserId, Long targetUserId) {

@@ -11,6 +11,7 @@ import cn.iocoder.yudao.module.tutor.dal.dataobject.teacher.TutorTeacherProfileD
 import cn.iocoder.yudao.module.tutor.dal.mysql.certification.TutorCertificationMapper;
 import cn.iocoder.yudao.module.tutor.enums.audit.TutorAuditStatusEnum;
 import cn.iocoder.yudao.module.tutor.service.notify.TutorNotifyService;
+import cn.iocoder.yudao.module.tutor.service.security.TutorContentSecurityService;
 import cn.iocoder.yudao.module.tutor.service.teacher.TutorTeacherProfileService;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import org.springframework.stereotype.Service;
@@ -19,6 +20,7 @@ import org.springframework.validation.annotation.Validated;
 
 import javax.annotation.Resource;
 import java.time.LocalDateTime;
+import java.util.Arrays;
 
 import static cn.iocoder.yudao.framework.common.exception.util.ServiceExceptionUtil.exception;
 import static cn.iocoder.yudao.module.tutor.enums.ErrorCodeConstants.*;
@@ -33,6 +35,8 @@ public class TutorCertificationServiceImpl implements TutorCertificationService 
     private TutorTeacherProfileService teacherProfileService;
     @Resource
     private TutorNotifyService tutorNotifyService;
+    @Resource
+    private TutorContentSecurityService contentSecurityService;
 
     @Override
     public TutorCertificationDO getCertification(Long userId) {
@@ -42,6 +46,10 @@ public class TutorCertificationServiceImpl implements TutorCertificationService 
     @Override
     @Transactional
     public TutorCertificationDO submitCertification(Long userId, AppTutorCertificationSubmitReqVO reqVO) {
+        if (contentSecurityService != null) {
+            contentSecurityService.validateTexts("certification", Arrays.asList(reqVO.getRealName(),
+                    reqVO.getEducationFileUrl(), reqVO.getTeacherCertFileUrl()));
+        }
         TutorTeacherProfileDO teacherProfile = teacherProfileService.getOrCreateTeacherProfile(userId);
         TutorCertificationDO certification = certificationMapper.selectByUserId(userId);
         if (certification != null && TutorAuditStatusEnum.WAITING.getStatus().equals(certification.getStatus())) {

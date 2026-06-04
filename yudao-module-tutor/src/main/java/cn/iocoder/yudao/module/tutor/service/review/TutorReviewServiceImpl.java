@@ -14,6 +14,7 @@ import cn.iocoder.yudao.module.tutor.enums.match.TutorMatchStatusEnum;
 import cn.iocoder.yudao.module.tutor.enums.point.TutorPointTaskTypeEnum;
 import cn.iocoder.yudao.module.tutor.service.notify.TutorNotifyService;
 import cn.iocoder.yudao.module.tutor.service.point.TutorPointRewardService;
+import cn.iocoder.yudao.module.tutor.service.security.TutorContentSecurityService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
@@ -21,8 +22,12 @@ import org.springframework.validation.annotation.Validated;
 import javax.annotation.Resource;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 import static cn.iocoder.yudao.framework.common.exception.util.ServiceExceptionUtil.exception;
 import static cn.iocoder.yudao.module.tutor.enums.ErrorCodeConstants.*;
@@ -41,10 +46,15 @@ public class TutorReviewServiceImpl implements TutorReviewService {
     private TutorPointRewardService pointRewardService;
     @Resource
     private TutorNotifyService tutorNotifyService;
+    @Resource
+    private TutorContentSecurityService contentSecurityService;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public TutorReviewDO createReview(Long reviewerUserId, AppTutorReviewCreateReqVO reqVO) {
+        if (contentSecurityService != null) {
+            contentSecurityService.validateTexts("review", java.util.Arrays.asList(reqVO.getTags(), reqVO.getContent()));
+        }
         TutorMatchRecordDO match = matchRecordMapper.selectById(reqVO.getMatchId());
         if (match == null) {
             throw exception(MATCH_NOT_EXISTS);
@@ -86,6 +96,19 @@ public class TutorReviewServiceImpl implements TutorReviewService {
     @Override
     public List<TutorReviewDO> getTargetReviewList(Long targetUserId) {
         return reviewMapper.selectVisibleListByTargetUserId(targetUserId);
+    }
+
+    @Override
+    public Map<String, Long> getTargetReviewTagStats(Long targetUserId) {
+        Map<String, Long> stats = reviewMapper.selectVisibleTagsByTargetUserId(targetUserId).stream()
+                .filter(tagText -> tagText != null && !tagText.trim().isEmpty())
+                .flatMap(tagText -> Arrays.stream(tagText.split("[,，]")))
+                .map(String::trim)
+                .filter(tag -> !tag.isEmpty())
+                .collect(Collectors.groupingBy(tag -> tag, Collectors.counting()));
+        return stats.entrySet().stream()
+                .sorted((a, b) -> Long.compare(b.getValue(), a.getValue()))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b) -> a, LinkedHashMap::new));
     }
 
     @Override

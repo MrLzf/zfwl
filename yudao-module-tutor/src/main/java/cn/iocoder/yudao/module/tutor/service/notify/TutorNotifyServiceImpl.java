@@ -3,6 +3,7 @@ package cn.iocoder.yudao.module.tutor.service.notify;
 import cn.iocoder.yudao.module.system.api.notify.NotifyMessageSendApi;
 import cn.iocoder.yudao.module.system.api.notify.dto.NotifySendSingleToUserReqDTO;
 import cn.iocoder.yudao.module.tutor.enums.audit.TutorAuditStatusEnum;
+import cn.iocoder.yudao.module.tutor.service.subscribe.TutorSubscribeMessageService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -27,6 +28,8 @@ public class TutorNotifyServiceImpl implements TutorNotifyService {
 
     @Resource
     private NotifyMessageSendApi notifyMessageSendApi;
+    @Resource
+    private TutorSubscribeMessageService subscribeMessageService;
 
     @Override
     public void sendCertificationAuditResult(Long userId, Integer status, String rejectReason) {
@@ -40,6 +43,7 @@ public class TutorNotifyServiceImpl implements TutorNotifyService {
         params.put("status", getAuditStatusName(status));
         params.put("reason", rejectReason == null ? "" : rejectReason);
         send(userId, TEMPLATE_CERTIFICATION_AUDIT, params);
+        triggerSubscribe(userId, "audit", "认证审核结果", getAuditStatusName(status), bizId, targetType, targetId);
     }
 
     @Override
@@ -56,6 +60,7 @@ public class TutorNotifyServiceImpl implements TutorNotifyService {
         params.put("status", getAuditStatusName(auditStatus));
         params.put("reason", rejectReason == null ? "" : rejectReason);
         send(userId, TEMPLATE_PUBLISH_AUDIT, params);
+        triggerSubscribe(userId, "audit", "发布审核结果", title, bizId, targetType, targetId);
     }
 
     @Override
@@ -131,6 +136,8 @@ public class TutorNotifyServiceImpl implements TutorNotifyService {
         params.put("matchId", matchId);
         send(parentUserId, TEMPLATE_MATCH_SUCCESS, params);
         send(teacherUserId, TEMPLATE_MATCH_SUCCESS, params);
+        triggerSubscribe(parentUserId, "match", "匹配成功", "双方已确认匹配", "match:" + matchId, "match", matchId);
+        triggerSubscribe(teacherUserId, "match", "匹配成功", "双方已确认匹配", "match:" + matchId, "match", matchId);
     }
 
     @Override
@@ -140,6 +147,19 @@ public class TutorNotifyServiceImpl implements TutorNotifyService {
         params.put("reviewerUserId", reviewerUserId);
         params.put("rating", rating);
         send(targetUserId, TEMPLATE_REVIEW_CREATED, params);
+        triggerSubscribe(targetUserId, "review", "收到评价", rating + " 星评价", "review:" + rating, "match", null);
+    }
+
+    private void triggerSubscribe(Long userId, String noticeType, String title, String content,
+                                  String bizId, String targetType, Long targetId) {
+        try {
+            if (subscribeMessageService == null) {
+                return;
+            }
+            subscribeMessageService.trigger(userId, noticeType, title, content, bizId, targetType, targetId);
+        } catch (Exception ex) {
+            log.warn("[triggerSubscribe][userId({}) noticeType({}) title({}) 订阅消息触发失败]", userId, noticeType, title, ex);
+        }
     }
 
     private void send(Long userId, String templateCode, Map<String, Object> params) {

@@ -7,11 +7,14 @@ import cn.iocoder.yudao.module.tutor.controller.app.review.vo.AppTutorReviewCrea
 import cn.iocoder.yudao.module.tutor.dal.dataobject.review.TutorReviewDO;
 
 import java.util.List;
+import java.util.Map;
 
 public interface TutorReviewService {
     TutorReviewDO createReview(Long reviewerUserId, AppTutorReviewCreateReqVO reqVO);
     List<TutorReviewDO> getMyReviewList(Long reviewerUserId);
     List<TutorReviewDO> getTargetReviewList(Long targetUserId);
+
+    Map<String, Long> getTargetReviewTagStats(Long targetUserId);
     PageResult<TutorReviewDO> getReviewPage(AdminTutorReviewPageReqVO reqVO);
     TutorReviewDO updateReviewStatus(AdminTutorReviewUpdateStatusReqVO reqVO);
 }

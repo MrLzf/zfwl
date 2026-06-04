@@ -41,7 +41,7 @@ public interface TutorTeacherResumeMapper extends BaseMapperX<TutorTeacherResume
                 .eqIfPresent(TutorTeacherResumeDO::getStatus, reqVO.getStatus())
                 .eqIfPresent(TutorTeacherResumeDO::getAuditStatus, reqVO.getAuditStatus())
                 .betweenIfPresent(TutorTeacherResumeDO::getCreateTime, reqVO.getCreateTime())
-                .orderByDesc(TutorTeacherResumeDO::getId));
+                .last("ORDER BY EXISTS (SELECT 1 FROM tutor_vip_record v WHERE v.user_id = tutor_teacher_resume.user_id AND v.status = 0 AND v.start_time <= NOW() AND v.end_time > NOW() AND v.deleted = b'0') DESC, id DESC"));
     }
 
     default PageResult<TutorTeacherResumeDO> selectSquarePage(AppTutorTeacherResumePageReqVO reqVO) {

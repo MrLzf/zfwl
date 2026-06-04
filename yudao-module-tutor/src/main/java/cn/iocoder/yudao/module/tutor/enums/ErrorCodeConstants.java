@@ -65,4 +65,16 @@ public interface ErrorCodeConstants {
     ErrorCode VALUE_SERVICE_TARGET_NOT_EXISTS = new ErrorCode(1_040_009_002, "增值服务目标不存在");
     ErrorCode VALUE_SERVICE_POINT_NOT_ENOUGH = new ErrorCode(1_040_009_003, "积分不足，无法购买增值服务");
 
+    // ========== VIP 会员 1-040-010-000 ==========
+    ErrorCode VIP_CONFIG_NOT_EXISTS = new ErrorCode(1_040_010_000, "VIP 会员配置不存在或已停用");
+    ErrorCode VIP_POINT_NOT_ENOUGH = new ErrorCode(1_040_010_001, "积分不足，无法购买 VIP");
+
+    // ========== 投诉举报 1-040-011-000 ==========
+    ErrorCode COMPLAINT_TARGET_NOT_EXISTS = new ErrorCode(1_040_011_000, "举报目标不存在");
+    ErrorCode COMPLAINT_NOT_EXISTS = new ErrorCode(1_040_011_001, "举报记录不存在");
+    ErrorCode COMPLAINT_HANDLE_RESULT_REQUIRED = new ErrorCode(1_040_011_002, "处理举报时必须填写处理结果");
+
+    // ========== 内容安全 1-040-012-000 ==========
+    ErrorCode CONTENT_SECURITY_REJECTED = new ErrorCode(1_040_012_000, "内容包含违规信息，请修改后再提交");
+
 }

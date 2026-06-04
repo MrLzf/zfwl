@@ -16,6 +16,7 @@ import cn.iocoder.yudao.module.tutor.enums.publish.TutorPublishStatusEnum;
 import cn.iocoder.yudao.module.tutor.service.city.TutorCityService;
 import cn.iocoder.yudao.module.tutor.service.notify.TutorNotifyService;
 import cn.iocoder.yudao.module.tutor.service.parent.TutorParentProfileService;
+import cn.iocoder.yudao.module.tutor.service.security.TutorContentSecurityService;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -46,11 +47,14 @@ public class TutorDemandServiceImpl implements TutorDemandService {
     private TutorCityService cityService;
     @Resource
     private TutorNotifyService tutorNotifyService;
+    @Resource
+    private TutorContentSecurityService contentSecurityService;
 
     @Override
     @Transactional
     public TutorDemandDO createDemand(Long userId, AppTutorDemandSaveReqVO reqVO) {
         saveParentProfileFromDemand(userId, reqVO);
+        validateContent(reqVO);
         validateActivePublishCount(userId);
         TutorCityDO city = cityService.validateCityOpened(reqVO.getCityCode());
         TutorDemandDO demand = buildDemand(userId, city, reqVO)
@@ -69,6 +73,7 @@ public class TutorDemandServiceImpl implements TutorDemandService {
     @Transactional
     public TutorDemandDO updateDemand(Long userId, Long id, AppTutorDemandSaveReqVO reqVO) {
         saveParentProfileFromDemand(userId, reqVO);
+        validateContent(reqVO);
         TutorDemandDO demand = validateDemandOwner(userId, id);
         if (!ACTIVE_STATUSES.contains(demand.getStatus())) {
             validateActivePublishCount(userId);
@@ -218,6 +223,14 @@ public class TutorDemandServiceImpl implements TutorDemandService {
                 .contactMobileMask(DesensitizedUtil.mobilePhone(reqVO.getContactMobile()))
                 .contactWechatEncrypt(reqVO.getContactWechat())
                 .contactWechatMask(maskWechat(reqVO.getContactWechat()));
+    }
+
+    private void validateContent(AppTutorDemandSaveReqVO reqVO) {
+        if (contentSecurityService == null) {
+            return;
+        }
+        contentSecurityService.validateTexts("demand", Arrays.asList(reqVO.getTitle(), reqVO.getSubjects(),
+                reqVO.getDescription(), reqVO.getContactMobile(), reqVO.getContactWechat()));
     }
 
     private void saveParentProfileFromDemand(Long userId, AppTutorDemandSaveReqVO reqVO) {

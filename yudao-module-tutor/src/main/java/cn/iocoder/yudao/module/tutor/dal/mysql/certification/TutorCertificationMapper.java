@@ -20,6 +20,7 @@ public interface TutorCertificationMapper extends BaseMapperX<TutorCertification
                 .likeIfPresent(TutorCertificationDO::getRealName, reqVO.getRealName())
                 .eqIfPresent(TutorCertificationDO::getUserId, reqVO.getUserId())
                 .betweenIfPresent(TutorCertificationDO::getCreateTime, reqVO.getCreateTime())
+                .orderByDesc(TutorCertificationDO::getStatus)
                 .orderByDesc(TutorCertificationDO::getId));
     }
 

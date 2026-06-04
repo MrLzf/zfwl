@@ -9,7 +9,8 @@ public enum TutorValueServiceTypeEnum {
 
     BOOST("boost", "加速"),
     URGENT("urgent", "加急"),
-    TOP("top", "置顶");
+    TOP("top", "置顶"),
+    VIP("vip", "VIP 会员");
 
     private final String type;
     private final String name;

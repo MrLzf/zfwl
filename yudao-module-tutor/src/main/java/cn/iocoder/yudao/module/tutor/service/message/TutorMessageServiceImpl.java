@@ -7,9 +7,15 @@ import cn.iocoder.yudao.module.system.service.notify.NotifyMessageService;
 import cn.iocoder.yudao.module.tutor.controller.app.message.vo.AppTutorMessagePageReqVO;
 import cn.iocoder.yudao.module.tutor.controller.app.message.vo.AppTutorMessageRespVO;
 import cn.iocoder.yudao.module.tutor.controller.app.message.vo.AppTutorMessageSummaryRespVO;
+import cn.iocoder.yudao.module.tutor.controller.app.message.vo.chat.AppTutorChatMessagePageReqVO;
+import cn.iocoder.yudao.module.tutor.controller.app.message.vo.chat.AppTutorChatMessageSendReqVO;
+import cn.iocoder.yudao.module.tutor.dal.dataobject.message.TutorChatMessageDO;
+import cn.iocoder.yudao.module.tutor.dal.mysql.message.TutorChatMessageMapper;
+import cn.iocoder.yudao.module.tutor.service.security.TutorContentSecurityService;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -23,6 +29,10 @@ public class TutorMessageServiceImpl implements TutorMessageService {
 
     @Resource
     private NotifyMessageService notifyMessageService;
+    @Resource
+    private TutorChatMessageMapper chatMessageMapper;
+    @Resource
+    private TutorContentSecurityService contentSecurityService;
 
     @Override
     public AppTutorMessageSummaryRespVO getSummary(Long userId) {
@@ -63,6 +73,22 @@ public class TutorMessageServiceImpl implements TutorMessageService {
     @Override
     public void readAll(Long userId, String category) {
         notifyMessageService.updateAllTutorNotifyMessageRead(userId, UserTypeEnum.MEMBER.getValue(), category);
+    }
+
+    @Override
+    public TutorChatMessageDO sendChatMessage(Long userId, AppTutorChatMessageSendReqVO reqVO) {
+        contentSecurityService.validateText("chat", reqVO.getContent());
+        contentSecurityService.validateImageUrl("chat", reqVO.getImageUrl());
+        TutorChatMessageDO message = TutorChatMessageDO.builder().userId(userId).receiverUserId(reqVO.getReceiverUserId())
+                .messageType(reqVO.getMessageType()).content(reqVO.getContent()).imageUrl(reqVO.getImageUrl())
+                .readStatus(false).build();
+        chatMessageMapper.insert(message);
+        return message;
+    }
+
+    @Override
+    public PageResult<TutorChatMessageDO> getChatMessagePage(Long userId, AppTutorChatMessagePageReqVO reqVO) {
+        return chatMessageMapper.selectRecentPage(userId, reqVO.getReceiverUserId(), reqVO, LocalDateTime.now().minusDays(30));
     }
 
     private List<NotifyMessageDO> getMessages(Long userId) {

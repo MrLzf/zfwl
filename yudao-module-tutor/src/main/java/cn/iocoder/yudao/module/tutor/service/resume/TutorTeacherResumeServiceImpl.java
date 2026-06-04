@@ -15,6 +15,7 @@ import cn.iocoder.yudao.module.tutor.enums.audit.TutorAuditStatusEnum;
 import cn.iocoder.yudao.module.tutor.enums.publish.TutorPublishStatusEnum;
 import cn.iocoder.yudao.module.tutor.service.city.TutorCityService;
 import cn.iocoder.yudao.module.tutor.service.notify.TutorNotifyService;
+import cn.iocoder.yudao.module.tutor.service.security.TutorContentSecurityService;
 import cn.iocoder.yudao.module.tutor.service.teacher.TutorTeacherProfileService;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import org.springframework.stereotype.Service;
@@ -46,10 +47,13 @@ public class TutorTeacherResumeServiceImpl implements TutorTeacherResumeService 
     private TutorCityService cityService;
     @Resource
     private TutorNotifyService tutorNotifyService;
+    @Resource
+    private TutorContentSecurityService contentSecurityService;
 
     @Override
     public TutorTeacherResumeDO createResume(Long userId, AppTutorTeacherResumeSaveReqVO reqVO) {
         validateTeacherCertification(userId);
+        validateContent(reqVO);
         validateActivePublishCount(userId);
         TutorCityDO city = cityService.validateCityOpened(reqVO.getCityCode());
         TutorTeacherResumeDO resume = buildResume(userId, city, reqVO)
@@ -68,6 +72,7 @@ public class TutorTeacherResumeServiceImpl implements TutorTeacherResumeService 
     @Override
     public TutorTeacherResumeDO updateResume(Long userId, Long id, AppTutorTeacherResumeSaveReqVO reqVO) {
         validateTeacherCertification(userId);
+        validateContent(reqVO);
         TutorTeacherResumeDO resume = validateResumeOwner(userId, id);
         if (!ACTIVE_STATUSES.contains(resume.getStatus())) {
             validateActivePublishCount(userId);
@@ -216,6 +221,14 @@ public class TutorTeacherResumeServiceImpl implements TutorTeacherResumeService 
                 .contactMobileMask(DesensitizedUtil.mobilePhone(reqVO.getContactMobile()))
                 .contactWechatEncrypt(reqVO.getContactWechat())
                 .contactWechatMask(maskWechat(reqVO.getContactWechat()));
+    }
+
+    private void validateContent(AppTutorTeacherResumeSaveReqVO reqVO) {
+        if (contentSecurityService == null) {
+            return;
+        }
+        contentSecurityService.validateTexts("resume", Arrays.asList(reqVO.getTitle(), reqVO.getSubjects(),
+                reqVO.getTeachingExperience(), reqVO.getAvailableTimes(), reqVO.getContactMobile(), reqVO.getContactWechat()));
     }
 
     private void validateTeacherCertification(Long userId) {

@@ -5,6 +5,10 @@ import cn.iocoder.yudao.framework.common.pojo.PageResult;
 import cn.iocoder.yudao.module.tutor.controller.app.message.vo.AppTutorMessagePageReqVO;
 import cn.iocoder.yudao.module.tutor.controller.app.message.vo.AppTutorMessageRespVO;
 import cn.iocoder.yudao.module.tutor.controller.app.message.vo.AppTutorMessageSummaryRespVO;
+import cn.iocoder.yudao.module.tutor.controller.app.message.vo.chat.AppTutorChatMessagePageReqVO;
+import cn.iocoder.yudao.module.tutor.controller.app.message.vo.chat.AppTutorChatMessageRespVO;
+import cn.iocoder.yudao.module.tutor.controller.app.message.vo.chat.AppTutorChatMessageSendReqVO;
+import cn.iocoder.yudao.module.tutor.dal.dataobject.message.TutorChatMessageDO;
 import cn.iocoder.yudao.module.tutor.service.message.TutorMessageService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -53,6 +57,27 @@ public class AppTutorMessageController {
             @Pattern(regexp = "audit|contact|match|review|point", message = "消息分类不正确") String category) {
         tutorMessageService.readAll(getLoginUserId(), category);
         return success(Boolean.TRUE);
+    }
+
+    @PostMapping("/chat/send")
+    @Operation(summary = "发送客服/留言消息")
+    public CommonResult<AppTutorChatMessageRespVO> sendChatMessage(@RequestBody @Valid AppTutorChatMessageSendReqVO reqVO) {
+        return success(convert(tutorMessageService.sendChatMessage(getLoginUserId(), reqVO)));
+    }
+
+    @GetMapping("/chat/page")
+    @Operation(summary = "获得 30 天内客服/留言会话")
+    public CommonResult<PageResult<AppTutorChatMessageRespVO>> getChatMessagePage(@Valid AppTutorChatMessagePageReqVO reqVO) {
+        PageResult<TutorChatMessageDO> page = tutorMessageService.getChatMessagePage(getLoginUserId(), reqVO);
+        return success(new PageResult<>(page.getList().stream().map(AppTutorMessageController::convert)
+                .collect(java.util.stream.Collectors.toList()), page.getTotal()));
+    }
+
+    private static AppTutorChatMessageRespVO convert(TutorChatMessageDO message) {
+        return AppTutorChatMessageRespVO.builder().id(message.getId()).userId(message.getUserId())
+                .receiverUserId(message.getReceiverUserId()).messageType(message.getMessageType())
+                .content(message.getContent()).imageUrl(message.getImageUrl()).readStatus(message.getReadStatus())
+                .createTime(message.getCreateTime()).build();
     }
 
 }

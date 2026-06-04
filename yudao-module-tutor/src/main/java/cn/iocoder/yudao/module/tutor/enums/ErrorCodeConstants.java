@@ -52,4 +52,17 @@ public interface ErrorCodeConstants {
     ErrorCode REVIEW_EXISTS = new ErrorCode(1_040_006_002, "已评价，请勿重复提交");
     ErrorCode REVIEW_NOT_EXISTS = new ErrorCode(1_040_006_003, "评价不存在");
 
+    // ========== 积分充值 1-040-007-000 ==========
+    ErrorCode POINT_PACKAGE_NOT_EXISTS = new ErrorCode(1_040_007_000, "积分包不存在或已停用");
+    ErrorCode POINT_RECHARGE_ORDER_NOT_EXISTS = new ErrorCode(1_040_007_001, "积分充值订单不存在");
+
+    // ========== 邀请 1-040-008-000 ==========
+    ErrorCode INVITE_CODE_NOT_EXISTS = new ErrorCode(1_040_008_000, "邀请码不存在或已失效");
+
+    // ========== 增值服务 1-040-009-000 ==========
+    ErrorCode VALUE_SERVICE_CONFIG_NOT_EXISTS = new ErrorCode(1_040_009_000, "增值服务配置不存在或已停用");
+    ErrorCode VALUE_SERVICE_TARGET_TYPE_NOT_SUPPORT = new ErrorCode(1_040_009_001, "增值服务目标类型不支持");
+    ErrorCode VALUE_SERVICE_TARGET_NOT_EXISTS = new ErrorCode(1_040_009_002, "增值服务目标不存在");
+    ErrorCode VALUE_SERVICE_POINT_NOT_ENOUGH = new ErrorCode(1_040_009_003, "积分不足，无法购买增值服务");
+
 }

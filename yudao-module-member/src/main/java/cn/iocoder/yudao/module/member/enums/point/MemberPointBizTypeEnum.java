@@ -29,8 +29,11 @@ public enum MemberPointBizTypeEnum implements ArrayValuable<Integer> {
 
     TUTOR_PROFILE_INIT(101, "家教身份档案奖励", "首次选择家教身份获得 {} 积分", true),
     TUTOR_ROLE_PROFILE_COMPLETE(102, "家教资料完善奖励", "首次完善家教资料获得 {} 积分", true),
+    TUTOR_INVITE_REWARD(103, "家教邀请奖励", "邀请新用户获得 {} 积分", true),
     TUTOR_FIVE_STAR_REVIEW(104, "家教五星好评奖励", "家教五星好评获得 {} 积分", true),
-    TUTOR_VIEW_CONTACT(201, "家教查看联系方式", "家教查看联系方式使用 {} 积分", false)
+    TUTOR_POINT_RECHARGE(105, "家教积分充值", "充值获得 {} 积分", true),
+    TUTOR_VIEW_CONTACT(201, "家教查看联系方式", "家教查看联系方式使用 {} 积分", false),
+    TUTOR_VALUE_SERVICE(202, "家教增值服务", "购买增值服务使用 {} 积分", false)
     ;
 
     /**

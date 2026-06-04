@@ -93,7 +93,10 @@ public interface TutorDemandMapper extends BaseMapperX<TutorDemandDO> {
             wrapper.orderByDesc("id");
             return;
         }
-        wrapper.orderByDesc("top_until").orderByDesc("urgent_until").orderByDesc("id");
+        wrapper.orderByDesc("top_until > NOW()")
+                .orderByDesc("urgent_until > NOW()")
+                .orderByDesc("boost_until > NOW()")
+                .orderByDesc("id");
     }
 
     static String buildDistanceExpr(java.math.BigDecimal longitude, java.math.BigDecimal latitude) {

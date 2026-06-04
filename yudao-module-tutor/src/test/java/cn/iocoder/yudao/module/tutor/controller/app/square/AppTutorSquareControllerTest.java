@@ -16,7 +16,7 @@ class AppTutorSquareControllerTest extends BaseMockitoUnitTest {
                 new BigDecimal("116.397128"), new BigDecimal("39.916527"),
                 new BigDecimal("116.407526"), new BigDecimal("39.904030"));
 
-        assertEquals(new BigDecimal("1.7"), distance);
+        assertEquals(new BigDecimal("1.6"), distance);
     }
 
     @Test

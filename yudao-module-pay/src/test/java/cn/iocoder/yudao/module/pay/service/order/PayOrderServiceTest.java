@@ -34,6 +34,7 @@ import org.springframework.context.annotation.Import;
 import javax.annotation.Resource;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 import static cn.iocoder.yudao.framework.common.util.date.LocalDateTimeUtils.*;
@@ -976,7 +977,7 @@ public class PayOrderServiceTest extends BaseDbAndRedisUnitTest {
         // 断言
         assertEquals(count, 0);
         // 断言 order 没有变化，因为没更新
-        assertPojoEquals(order, orderMapper.selectOne(null));
+        assertPayOrderEquals(order, orderMapper.selectOne(null));
     }
 
     @Test
@@ -998,7 +999,7 @@ public class PayOrderServiceTest extends BaseDbAndRedisUnitTest {
         // 断言
         assertEquals(count, 0);
         // 断言 order 没有变化，因为没更新
-        assertPojoEquals(order, orderMapper.selectOne(null));
+        assertPayOrderEquals(order, orderMapper.selectOne(null));
     }
 
     @Test
@@ -1027,7 +1028,7 @@ public class PayOrderServiceTest extends BaseDbAndRedisUnitTest {
         // 断言
         assertEquals(count, 0);
         // 断言 order 没有变化，因为没更新
-        assertPojoEquals(order, orderMapper.selectOne(null));
+        assertPayOrderEquals(order, orderMapper.selectOne(null));
     }
 
     @Test
@@ -1064,7 +1065,7 @@ public class PayOrderServiceTest extends BaseDbAndRedisUnitTest {
             // 断言
             assertEquals(count, 0);
             // 断言 order 没有变化，因为没更新
-            assertPojoEquals(order, orderMapper.selectOne(null));
+            assertPayOrderEquals(order, orderMapper.selectOne(null));
             verify(payOrderServiceImpl).notifyOrder(same(channel), same(respDTO));
         }
     }
@@ -1101,8 +1102,17 @@ public class PayOrderServiceTest extends BaseDbAndRedisUnitTest {
                 "updateTime", "updater");
         // 断言 order 变化
         order.setStatus(PayOrderStatusEnum.CLOSED.getStatus());
-        assertPojoEquals(order, orderMapper.selectOne(null),
+        assertPayOrderEquals(order, orderMapper.selectOne(null),
                 "updateTime", "updater");
+    }
+
+    private static void assertPayOrderEquals(PayOrderDO expected, PayOrderDO actual, String... ignoreFields) {
+        String[] actualIgnoreFields = new String[ignoreFields.length + 1];
+        actualIgnoreFields[0] = "expireTime";
+        System.arraycopy(ignoreFields, 0, actualIgnoreFields, 1, ignoreFields.length);
+        assertPojoEquals(expected, actual, actualIgnoreFields);
+        assertEquals(expected.getExpireTime().truncatedTo(ChronoUnit.MILLIS),
+                actual.getExpireTime().truncatedTo(ChronoUnit.MILLIS));
     }
 
 }

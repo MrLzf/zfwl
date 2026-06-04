@@ -35,6 +35,14 @@ public interface TutorCityService {
     void updateCity(Long id, Boolean opened, Boolean hot, Integer sort, Integer status);
 
     /**
+     * 更新城市运营规则。
+     *
+     * @param id 城市编号
+     * @param serviceConfig 城市运营配置 JSON
+     */
+    void updateCityRules(Long id, String serviceConfig);
+
+    /**
      * 校验城市已开通。
      *
      * @param code 城市编码

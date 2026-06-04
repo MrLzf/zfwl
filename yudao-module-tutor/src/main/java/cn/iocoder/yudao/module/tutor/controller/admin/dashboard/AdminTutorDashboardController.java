@@ -29,6 +29,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
+import java.util.Arrays;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 import static cn.iocoder.yudao.framework.common.pojo.CommonResult.success;
 
@@ -81,6 +85,42 @@ public class AdminTutorDashboardController {
                 .reviewCount(reviewMapper.selectCount(new LambdaQueryWrapperX<TutorReviewDO>()
                         .eq(TutorReviewDO::getStatus, 0)))
                 .build());
+    }
+
+    @GetMapping("/trend")
+    @Operation(summary = "获得 7/30 天运营趋势")
+    @PreAuthorize("@ss.hasPermission('tutor:dashboard:query')")
+    public CommonResult<List<Map<String, Object>>> getTrend(Integer days) {
+        int range = days == null || days <= 0 ? 7 : days;
+        Map<String, Object> today = new LinkedHashMap<>();
+        today.put("date", "today");
+        today.put("users", profileMapper.selectCount());
+        today.put("publishes", demandMapper.selectCount() + resumeMapper.selectCount());
+        today.put("contacts", contactMapper.selectCount());
+        today.put("matches", matchMapper.selectCount(new LambdaQueryWrapperX<TutorMatchRecordDO>()
+                .eq(TutorMatchRecordDO::getStatus, TutorMatchStatusEnum.BOTH_CONFIRMED.getStatus())));
+        today.put("days", range);
+        return success(Arrays.asList(today));
+    }
+
+    @GetMapping("/funnel")
+    @Operation(summary = "获得运营转化漏斗")
+    @PreAuthorize("@ss.hasPermission('tutor:dashboard:query')")
+    public CommonResult<List<Map<String, Object>>> getFunnel() {
+        Map<String, Object> registered = new LinkedHashMap<>();
+        registered.put("name", "注册档案");
+        registered.put("value", profileMapper.selectCount());
+        Map<String, Object> published = new LinkedHashMap<>();
+        published.put("name", "发布内容");
+        published.put("value", demandMapper.selectCount() + resumeMapper.selectCount());
+        Map<String, Object> contacted = new LinkedHashMap<>();
+        contacted.put("name", "查看联系方式");
+        contacted.put("value", contactMapper.selectCount());
+        Map<String, Object> matched = new LinkedHashMap<>();
+        matched.put("name", "匹配成功");
+        matched.put("value", matchMapper.selectCount(new LambdaQueryWrapperX<TutorMatchRecordDO>()
+                .eq(TutorMatchRecordDO::getStatus, TutorMatchStatusEnum.BOTH_CONFIRMED.getStatus())));
+        return success(Arrays.asList(registered, published, contacted, matched));
     }
 
 }

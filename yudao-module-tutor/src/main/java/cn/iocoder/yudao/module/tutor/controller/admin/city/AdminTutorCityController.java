@@ -13,7 +13,9 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.validation.Valid;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import static cn.iocoder.yudao.framework.common.pojo.CommonResult.success;
@@ -41,6 +43,18 @@ public class AdminTutorCityController {
     public CommonResult<Boolean> updateCity(@Valid @RequestBody AdminTutorCityUpdateReqVO updateReqVO) {
         cityService.updateCity(updateReqVO.getId(), updateReqVO.getOpened(), updateReqVO.getHot(),
                 updateReqVO.getSort(), updateReqVO.getStatus());
+        return success(true);
+    }
+
+    @PutMapping("/rules")
+    @Operation(summary = "更新家教城市运营规则")
+    @PreAuthorize("@ss.hasPermission('tutor:city:update')")
+    public CommonResult<Boolean> updateCityRules(@Valid @RequestBody AdminTutorCityUpdateReqVO updateReqVO) {
+        Map<String, Object> rules = new LinkedHashMap<>();
+        rules.put("auditSlaHours", updateReqVO.getAuditSlaHours());
+        rules.put("defaultRadiusKm", updateReqVO.getDefaultRadiusKm());
+        rules.put("contactPointCost", updateReqVO.getContactPointCost());
+        cityService.updateCityRules(updateReqVO.getId(), rules.toString());
         return success(true);
     }
 

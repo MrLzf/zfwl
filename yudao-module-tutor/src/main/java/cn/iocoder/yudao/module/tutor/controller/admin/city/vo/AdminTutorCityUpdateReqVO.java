@@ -32,4 +32,13 @@ public class AdminTutorCityUpdateReqVO {
     @InEnum(CommonStatusEnum.class)
     private Integer status;
 
+    @Schema(description = "审核 SLA，单位小时", example = "24")
+    private Integer auditSlaHours;
+
+    @Schema(description = "默认半径，单位公里", example = "8")
+    private Integer defaultRadiusKm;
+
+    @Schema(description = "查看联系方式扣分规则", example = "10")
+    private Integer contactPointCost;
+
 }

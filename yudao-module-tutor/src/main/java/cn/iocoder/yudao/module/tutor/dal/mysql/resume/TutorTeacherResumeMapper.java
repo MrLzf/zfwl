@@ -54,6 +54,12 @@ public interface TutorTeacherResumeMapper extends BaseMapperX<TutorTeacherResume
                 .ge(reqVO.getPriceMin() != null, "hourly_price", reqVO.getPriceMin())
                 .le(reqVO.getPriceMax() != null, "hourly_price", reqVO.getPriceMax())
                 .eq(reqVO.getFreeTrialEnabled() != null, "free_trial_enabled", reqVO.getFreeTrialEnabled());
+        wrapper.exists("SELECT 1 FROM tutor_recommend_weight_config rw WHERE rw.scene = 'square_resume' "
+                + "AND (rw.city_code IS NULL OR rw.city_code = tutor_teacher_resume.city_code) "
+                + "AND rw.status = 0 AND rw.deleted = b'0'");
+        if (reqVO.getCityCode() != null && reqVO.getLongitude() != null && reqVO.getLatitude() != null) {
+            wrapper.apply("geohash IS NULL OR geohash LIKE CONCAT(LEFT(geohash, 4), '%')");
+        }
         cn.iocoder.yudao.module.tutor.dal.mysql.demand.TutorDemandMapper.appendDistanceConditionAndOrder(
                 wrapper, reqVO.getLongitude(), reqVO.getLatitude(), reqVO.getDistanceKm(), reqVO.getSortType());
         return selectPage(reqVO, wrapper);

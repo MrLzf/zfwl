@@ -49,6 +49,18 @@ public class TutorCityServiceImpl implements TutorCityService {
     }
 
     @Override
+    public void updateCityRules(Long id, String serviceConfig) {
+        TutorCityDO city = cityMapper.selectById(id);
+        if (city == null) {
+            throw exception(CITY_NOT_EXISTS);
+        }
+        cityMapper.updateById(TutorCityDO.builder()
+                .id(id)
+                .serviceConfig(serviceConfig)
+                .build());
+    }
+
+    @Override
     public TutorCityDO validateCityOpened(String code) {
         TutorCityDO city = cityMapper.selectByCode(code);
         if (city == null || CommonStatusEnum.isDisable(city.getStatus())) {

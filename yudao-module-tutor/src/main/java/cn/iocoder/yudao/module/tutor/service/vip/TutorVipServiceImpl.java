@@ -27,7 +27,7 @@ public class TutorVipServiceImpl implements TutorVipService {
     private static final int DEFAULT_MONTHLY_GIFT_POINT = 30;
 
     @Resource
-    private TutorValueServiceConfigMapper configMapper;
+    private TutorValueServiceConfigMapper tutorValueServiceConfigMapper;
     @Resource
     private TutorVipRecordMapper vipRecordMapper;
     @Resource
@@ -40,7 +40,7 @@ public class TutorVipServiceImpl implements TutorVipService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public TutorVipRecordDO buyVip(Long userId, Long configId) {
-        TutorValueServiceConfigDO config = configMapper.selectById(configId);
+        TutorValueServiceConfigDO config = tutorValueServiceConfigMapper.selectById(configId);
         if (config == null || config.getStatus() == null || config.getStatus() != 0
                 || !TutorValueServiceTypeEnum.VIP.getType().equals(config.getServiceType())) {
             throw exception(VIP_CONFIG_NOT_EXISTS);

@@ -28,7 +28,7 @@ class TutorValueServiceServiceImplTest extends BaseMockitoUnitTest {
     private TutorValueServiceServiceImpl valueService;
 
     @Mock
-    private TutorValueServiceConfigMapper configMapper;
+    private TutorValueServiceConfigMapper tutorValueServiceConfigMapper;
     @Mock
     private TutorValueServiceOrderMapper orderMapper;
     @Mock
@@ -45,7 +45,7 @@ class TutorValueServiceServiceImplTest extends BaseMockitoUnitTest {
         TutorValueServiceConfigDO config = TutorValueServiceConfigDO.builder().id(1L)
                 .serviceType(TutorValueServiceTypeEnum.TOP.getType()).targetType("demand")
                 .pointPrice(30).durationHours(24).status(0).build();
-        when(configMapper.selectById(1L)).thenReturn(config);
+        when(tutorValueServiceConfigMapper.selectById(1L)).thenReturn(config);
         when(demandMapper.selectById(11L)).thenReturn(TutorDemandDO.builder().id(11L).userId(100L).build());
         MemberUserRespDTO user = new MemberUserRespDTO();
         user.setPoint(100);

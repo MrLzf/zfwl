@@ -32,7 +32,7 @@ import static cn.iocoder.yudao.module.tutor.enums.ErrorCodeConstants.*;
 public class TutorValueServiceServiceImpl implements TutorValueServiceService {
 
     @Resource
-    private TutorValueServiceConfigMapper configMapper;
+    private TutorValueServiceConfigMapper tutorValueServiceConfigMapper;
     @Resource
     private TutorValueServiceOrderMapper orderMapper;
     @Resource
@@ -46,13 +46,13 @@ public class TutorValueServiceServiceImpl implements TutorValueServiceService {
 
     @Override
     public List<TutorValueServiceConfigDO> getEnabledConfigList(String targetType) {
-        return configMapper.selectEnabledList(targetType);
+        return tutorValueServiceConfigMapper.selectEnabledList(targetType);
     }
 
     @Override
     @Transactional
     public TutorValueServiceOrderDO buyService(Long userId, AppTutorValueServiceBuyReqVO reqVO) {
-        TutorValueServiceConfigDO config = configMapper.selectById(reqVO.getConfigId());
+        TutorValueServiceConfigDO config = tutorValueServiceConfigMapper.selectById(reqVO.getConfigId());
         if (config == null || config.getStatus() == null || config.getStatus() != 0) {
             throw exception(VALUE_SERVICE_CONFIG_NOT_EXISTS);
         }

@@ -234,3 +234,86 @@ WHERE @tutor_resume_menu_id IS NOT NULL
       SELECT 1 FROM `system_menu`
       WHERE `parent_id` = @tutor_resume_menu_id AND `permission` = 'tutor:resume:offline' AND `deleted` = b'0'
   );
+
+INSERT INTO `system_menu` (`name`, `permission`, `type`, `sort`, `parent_id`, `path`, `icon`, `component`,
+                           `component_name`, `status`, `visible`, `keep_alive`, `always_show`,
+                           `creator`, `create_time`, `updater`, `update_time`, `deleted`)
+SELECT '试课预约', 'tutor:appointment:query', 2, 70, @tutor_parent_id, 'appointment', 'ep:calendar',
+       'tutor/appointment/index', 'TutorAppointment', 0, b'1', b'1', b'1', 'admin', NOW(), 'admin', NOW(), b'0'
+WHERE @tutor_parent_id IS NOT NULL
+  AND NOT EXISTS (SELECT 1 FROM `system_menu` WHERE `parent_id` = @tutor_parent_id AND `path` = 'appointment' AND `deleted` = b'0');
+
+INSERT INTO `system_menu` (`name`, `permission`, `type`, `sort`, `parent_id`, `path`, `icon`, `component`,
+                           `component_name`, `status`, `visible`, `keep_alive`, `always_show`,
+                           `creator`, `create_time`, `updater`, `update_time`, `deleted`)
+SELECT '投诉处理', 'tutor:complaint:query', 2, 75, @tutor_parent_id, 'complaint', 'ep:warning',
+       'tutor/complaint/index', 'TutorComplaint', 0, b'1', b'1', b'1', 'admin', NOW(), 'admin', NOW(), b'0'
+WHERE @tutor_parent_id IS NOT NULL
+  AND NOT EXISTS (SELECT 1 FROM `system_menu` WHERE `parent_id` = @tutor_parent_id AND `path` = 'complaint' AND `deleted` = b'0');
+
+SET @tutor_complaint_menu_id := (
+    SELECT `id` FROM `system_menu`
+    WHERE `parent_id` = @tutor_parent_id AND `path` = 'complaint' AND `deleted` = b'0'
+    ORDER BY `id` ASC LIMIT 1
+);
+
+INSERT INTO `system_menu` (`name`, `permission`, `type`, `sort`, `parent_id`, `path`, `icon`, `component`,
+                           `component_name`, `status`, `visible`, `keep_alive`, `always_show`,
+                           `creator`, `create_time`, `updater`, `update_time`, `deleted`)
+SELECT '投诉处理操作', 'tutor:complaint:handle', 3, 2, @tutor_complaint_menu_id, '', '', '', NULL,
+       0, b'1', b'1', b'1', 'admin', NOW(), 'admin', NOW(), b'0'
+WHERE @tutor_complaint_menu_id IS NOT NULL
+  AND NOT EXISTS (
+      SELECT 1 FROM `system_menu`
+      WHERE `parent_id` = @tutor_complaint_menu_id AND `permission` = 'tutor:complaint:handle' AND `deleted` = b'0'
+  );
+
+INSERT INTO `system_menu` (`name`, `permission`, `type`, `sort`, `parent_id`, `path`, `icon`, `component`,
+                           `component_name`, `status`, `visible`, `keep_alive`, `always_show`,
+                           `creator`, `create_time`, `updater`, `update_time`, `deleted`)
+SELECT '担保交易', 'tutor:escrow:query', 2, 110, @tutor_parent_id, 'escrow', 'ep:wallet',
+       'tutor/escrow/index', 'TutorEscrow', 0, b'1', b'1', b'1', 'admin', NOW(), 'admin', NOW(), b'0'
+WHERE @tutor_parent_id IS NOT NULL
+  AND NOT EXISTS (SELECT 1 FROM `system_menu` WHERE `parent_id` = @tutor_parent_id AND `path` = 'escrow' AND `deleted` = b'0');
+
+SET @tutor_escrow_menu_id := (
+    SELECT `id` FROM `system_menu`
+    WHERE `parent_id` = @tutor_parent_id AND `path` = 'escrow' AND `deleted` = b'0'
+    ORDER BY `id` ASC LIMIT 1
+);
+
+INSERT INTO `system_menu` (`name`, `permission`, `type`, `sort`, `parent_id`, `path`, `icon`, `component`,
+                           `component_name`, `status`, `visible`, `keep_alive`, `always_show`,
+                           `creator`, `create_time`, `updater`, `update_time`, `deleted`)
+SELECT '担保交易处理', 'tutor:escrow:handle', 3, 2, @tutor_escrow_menu_id, '', '', '', NULL,
+       0, b'1', b'1', b'1', 'admin', NOW(), 'admin', NOW(), b'0'
+WHERE @tutor_escrow_menu_id IS NOT NULL
+  AND NOT EXISTS (
+      SELECT 1 FROM `system_menu`
+      WHERE `parent_id` = @tutor_escrow_menu_id AND `permission` = 'tutor:escrow:handle' AND `deleted` = b'0'
+  );
+
+INSERT INTO `system_menu` (`name`, `permission`, `type`, `sort`, `parent_id`, `path`, `icon`, `component`,
+                           `component_name`, `status`, `visible`, `keep_alive`, `always_show`,
+                           `creator`, `create_time`, `updater`, `update_time`, `deleted`)
+SELECT '推荐配置', 'tutor:recommend:query', 2, 120, @tutor_parent_id, 'recommend', 'ep:sort',
+       'tutor/recommend/index', 'TutorRecommend', 0, b'1', b'1', b'1', 'admin', NOW(), 'admin', NOW(), b'0'
+WHERE @tutor_parent_id IS NOT NULL
+  AND NOT EXISTS (SELECT 1 FROM `system_menu` WHERE `parent_id` = @tutor_parent_id AND `path` = 'recommend' AND `deleted` = b'0');
+
+SET @tutor_recommend_menu_id := (
+    SELECT `id` FROM `system_menu`
+    WHERE `parent_id` = @tutor_parent_id AND `path` = 'recommend' AND `deleted` = b'0'
+    ORDER BY `id` ASC LIMIT 1
+);
+
+INSERT INTO `system_menu` (`name`, `permission`, `type`, `sort`, `parent_id`, `path`, `icon`, `component`,
+                           `component_name`, `status`, `visible`, `keep_alive`, `always_show`,
+                           `creator`, `create_time`, `updater`, `update_time`, `deleted`)
+SELECT '推荐配置更新', 'tutor:recommend:update', 3, 2, @tutor_recommend_menu_id, '', '', '', NULL,
+       0, b'1', b'1', b'1', 'admin', NOW(), 'admin', NOW(), b'0'
+WHERE @tutor_recommend_menu_id IS NOT NULL
+  AND NOT EXISTS (
+      SELECT 1 FROM `system_menu`
+      WHERE `parent_id` = @tutor_recommend_menu_id AND `permission` = 'tutor:recommend:update' AND `deleted` = b'0'
+  );
